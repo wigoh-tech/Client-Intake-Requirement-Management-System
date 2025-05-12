@@ -14,22 +14,22 @@ export default function FileUpload({ questionId, clientId }: { questionId: numbe
 
   const handleUpload = async () => {
     if (!file) return alert('No file selected');
-  
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('questionId', String(questionId));
     formData.append('clientId', clientId);
-  
+
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
-  
+
       const contentType = res.headers.get('content-type');
       const isJson = contentType && contentType.includes('application/json');
       const data = isJson ? await res.json() : null;
-  
+
       if (res.ok) {
         alert('File uploaded successfully!');
         setProgress(100);
@@ -40,15 +40,26 @@ export default function FileUpload({ questionId, clientId }: { questionId: numbe
       alert(`Network error: ${(err as Error).message}`);
     }
   };
-  
+
 
   return (
     <div className="space-y-2">
-      <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} />
-      <button onClick={handleUpload} className="bg-blue-600 text-white px-4 py-1 rounded">
-        Upload
-      </button>
-      {progress > 0 && <progress value={progress} max={100} className="w-full" />}
+    
+
+      <div className="grid w-full max-w-xs items-center gap-1.5">
+        <label
+          className="text-sm text-gray-400 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >Document</label>
+        <input
+          className="flex w-full rounded-md border border-blue-300 border-input bg-white text-sm text-gray-400 file:border-0 file:bg-blue-600 file:text-white file:text-sm file:font-medium"
+          type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange}
+
+        />
+        <button onClick={handleUpload} className="bg-blue-600 text-white px-4 py-1 rounded">
+          Upload
+        </button>
+        {progress > 0 && <progress value={progress} max={100} className="w-full" />}
+      </div>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 export default function RegisterClient() {
     const [userName, setUserName] = useState('');
     const [email, setEmail] = useState('');
-    const [clientId, setClientId] = useState(''); // optional client ID
+    const [clientId, setClientId] = useState(''); 
     const [submitted, setSubmitted] = useState(false);
     const router = useRouter();
 
@@ -13,7 +13,7 @@ export default function RegisterClient() {
         e.preventDefault();
 
         const payload: any = { userName, email , clientId};
-        if (clientId.trim()) payload.id = clientId; // include ID only if user entered one
+        if (clientId.trim()) payload.id = clientId; 
 
         const res = await fetch('/api/client', {
             method: 'POST',

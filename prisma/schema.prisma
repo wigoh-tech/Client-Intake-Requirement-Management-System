@@ -23,6 +23,7 @@ model Client {
   userName   String
   email      String          @unique
   answers    IntakeAnswer[]
+  requirements  Requirement[]
 }
 
 model IntakeQuestion {
@@ -38,7 +39,52 @@ model IntakeAnswer {
   clientId   String
   questionId Int
   answer     String
+  timestamp DateTime @default(now())
+  
+  @@index([clientId]) // Optional index to optimize queries
 
   client     Client          @relation(fields: [clientId], references: [id])
   question   IntakeQuestion  @relation(fields: [questionId], references: [id])
+  uploadedFiles UploadFile[]
+}
+
+model UploadFile {
+  id              Int           @id @default(autoincrement())
+  intakeAnswerId  Int
+
+  intakeAnswer    IntakeAnswer @relation(fields: [intakeAnswerId], references: [id])
+  filePath        String?
+  fileContent     Bytes?       // <-- for storing file in DB
+  createdAt       DateTime      @default(now())
+}
+
+
+model Requirement {
+  id          Int                @id @default(autoincrement())
+  title       String
+  description String
+  clients     Client[]
+  versions    RequirementVersion[]
+}
+
+model RequirementVersion {
+  id          Int          @id @default(autoincrement())
+  version     String
+  content     String
+  createdAt   DateTime     @default(now())
+  requirement Requirement  @relation(fields: [requirementId], references: [id])
+  requirementId Int
+  comments    Comment[]
+}
+
+model Comment {
+  id              Int       @id @default(autoincrement())
+  content         String
+  createdAt       DateTime  @default(now())
+  author              String
+  requirementVersion RequirementVersion @relation(fields: [requirementVersionId], references: [id])
+  requirementVersionId Int
+  parentCommentId Int?
+  parentComment   Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies         Comment[] @relation("CommentReplies")
 }
