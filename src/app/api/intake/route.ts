@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Answers should be an array' }, { status: 400 });
     }
 
-    // Proceed to save answers
+    // Save intake answers
     const answerData = answers.map((ans: { questionId: number; answer: string }) => ({
       questionId: ans.questionId,
       answer: ans.answer,
@@ -24,7 +24,36 @@ export async function POST(req: NextRequest) {
 
     await prisma.intakeAnswer.createMany({ data: answerData });
 
+    // Find the requirement answer by questionId
+    const requirementAnswerObj = answers.find((ans: { questionId: number }) => ans.questionId === 14);
+
+    if (requirementAnswerObj) {
+      const description = requirementAnswerObj.answer;
+
+      const newRequirement = await prisma.requirement.create({
+        data: {
+          title: 'Client Requirement',
+          description,
+          clients: {
+            connect: {
+              id: clientId, 
+            },
+          },
+        },
+      });
+
+      // Create initial version
+      await prisma.requirementVersion.create({
+        data: {
+          version: 'v1.0',
+          content: description,
+          requirementId: newRequirement.id,
+        },
+      });
+    }
+
     return NextResponse.json({ message: 'Answers submitted successfully' }, { status: 201 });
+
   } catch (error) {
     console.error('Error submitting answers:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

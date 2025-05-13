@@ -1,31 +1,118 @@
-// /pages/api/comments/index.ts
-import { prisma } from '@/lib/db'; // Adjust path as needed
+// /src/app/api/comment/route.ts
+import { NextResponse } from 'next/server';
+import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from '@/lib/db';
 
-export default async function handler(req: { method: string; query: { requirementVersionId: any; }; body: { content: any; requirementVersionId: any; parentCommentId: any; author: any; }; }, res: { status: (arg0: number) => { (): any; new(): any; json: { (arg0: any): any; new(): any; }; }; }) {
-  if (req.method === 'GET') {
-    const { requirementVersionId } = req.query;
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { content, author, requirementVersionId, parentCommentId } = body;
 
-    const comments = await prisma.comment.findMany({
-      where: { requirementVersionId: Number(requirementVersionId) },
-      orderBy: { createdAt: 'asc' },
+    // Step 1: Ensure `requirementVersionId` exists in the database.
+    const requirementVersion = await prisma.requirementVersion.findUnique({
+      where: { id: 1 },
     });
 
-    res.status(200).json(comments);
-  } else if (req.method === 'POST') {
-    const { content, requirementVersionId, parentCommentId, author } = req.body;
+    if (!requirementVersion) {
+      return NextResponse.json({ message: "Requirement Version not found." }, { status: 404 });
+    }
 
-    const comment = await prisma.comment.create({
+    // Step 2: Validate required fields
+    if (!content || !author || !requirementVersionId) {
+      return NextResponse.json({ message: "Missing required fields." }, { status: 400 });
+    }
+
+    // Step 3: Create the comment
+    const newComment = await prisma.comment.create({
       data: {
         content,
+        author,
         requirementVersionId: Number(requirementVersionId),
         parentCommentId: parentCommentId ? Number(parentCommentId) : null,
-        author,
       },
     });
 
-    res.status(200).json(comment);
-  } else {
-    return res.status(405).json({ message: 'Method not allowed' });
+    return NextResponse.json(newComment, { status: 201 });
+  } catch (error) {
+    console.error("Error creating comment:", error);
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }
 
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const requirementVersionId = url.searchParams.get("requirementVersionId");
+
+  // Validate requirementVersionId
+  if (!requirementVersionId) {
+    return NextResponse.json({ message: "Missing requirementVersionId" }, { status: 400 });
+  }
+
+  try {
+    // Fetch comments for the given requirementVersionId
+    const comments = await prisma.comment.findMany({
+      where: {
+        requirementVersionId: Number(requirementVersionId),
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    if (comments.length === 0) {
+      return NextResponse.json({ message: "No comments found for this requirementVersionId" }, { status: 404 });
+    }
+
+    return NextResponse.json(comments);
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+  }
+}
+
+
+type Data =
+  | { message: string }
+  | {
+      id: number;
+      content: string;
+      author: string;
+      createdAt: string;
+      requirementVersionId: number;
+      parentCommentId?: number | null;
+    };
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<Data>
+) {
+  if (req.method === "POST") {
+    const { content, author, requirementVersionId, parentCommentId } = req.body;
+
+    // Validate required fields
+    if (!content || !author || !requirementVersionId) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    try {
+      const newComment = await prisma.comment.create({
+        data: {
+          content,
+          author,
+          requirementVersionId: Number(requirementVersionId),
+          parentCommentId: parentCommentId ?? null,
+        },
+      });
+
+      return res.status(201).json({
+        ...newComment,
+        createdAt: newComment.createdAt.toISOString(),
+      });
+    } catch (error) {
+      console.error("API error creating comment:", error);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+
+  return res.status(405).json({ message: "Method Not Allowed" });
+}

@@ -14,7 +14,7 @@ export default function FileUpload({ questionId, clientId }: { questionId: numbe
 
   const handleUpload = async () => {
     if (!file) return alert('No file selected');
-
+    console.log('File:', file);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('questionId', String(questionId));
@@ -44,8 +44,6 @@ export default function FileUpload({ questionId, clientId }: { questionId: numbe
 
   return (
     <div className="space-y-2">
-    
-
       <div className="grid w-full max-w-xs items-center gap-1.5">
         <label
           className="text-sm text-gray-400 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"

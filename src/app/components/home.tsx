@@ -1,16 +1,48 @@
 
-import { useAuth } from '@clerk/nextjs';
-import React, { useState } from 'react';
+import { useAuth, useUser } from '@clerk/nextjs';
+import React, { useEffect, useState } from 'react';
 import RegisterClient from './register-client';
+import axios from "axios";
 
-function Home() {
+export default function Home() {
   const { userId, sessionId } = useAuth();
+  const { user } = useUser();
   const [isPopupVisible, setIsPopupVisible] = useState(false);
-
+  const [users, setUsers] = useState<{ id: string; email: string; username: string; status?: string; clients?: any[] }[]>([]);
+  const [clientList, setClientList] = useState<{ userName: string; email: string }[]>([]);
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [loadingClients, setLoadingClients] = useState(true);
   const handlePopupToggle = () => {
     setIsPopupVisible(!isPopupVisible);
   }
 
+  useEffect(() => {
+    async function fetchClients() {
+      try {
+        const res = await axios.get("/api/client");
+        setClientList(res.data);
+      } catch (err) {
+        console.error("Error fetching clients:", err);
+      } finally {
+        setLoadingClients(false);
+      }
+    }
+    fetchClients();
+  }, []);
+
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const res = await fetch('/api/user');
+        const data = await res.json();
+        setUsers(data);
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    }
+    fetchUsers();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
@@ -18,7 +50,7 @@ function Home() {
 
         <div className="lg:w-1/2">
           <h1 className="text-5xl font-extrabold text-blue-800 leading-tight mb-6">
-            Welcome to the Client Intake App
+            Welcome to the Client Intake App "{users.length > 0 ? users[0].username : 'Guest'}"
           </h1>
           <p className="text-lg text-gray-700 mb-6">
             This platform helps you collect and manage client intake forms efficiently. Whether you're a therapist, consultant, or agency — streamline the intake process with our customizable forms and client tracking system.
@@ -28,7 +60,10 @@ function Home() {
           </p>
           <p
             onClick={handlePopupToggle}
-            className="inline-block px-6 py-3 bg-blue-600 text-white font-medium rounded-xl shadow hover:bg-blue-700 transition"
+            className={`inline-block px-6 py-3 font-medium rounded-xl shadow transition ${isDisabled
+              ? "bg-gray-400 text-white cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
           >
             Client Login
           </p>
@@ -36,9 +71,10 @@ function Home() {
 
           <div className="mt-8 text-gray-600">
             {userId && (
-              <p>Hello, <span className="font-semibold text-blue-700">{userId}</span> — your active session is <span className="font-semibold">{sessionId}</span>.</p>
+              <p>Hello,{user?.username} <span className="font-semibold text-blue-700">{userId}</span> — your active session is <span className="font-semibold">{sessionId}</span>.</p>
             )}
           </div>
+
         </div>
 
 
@@ -50,7 +86,15 @@ function Home() {
           />
         </div>
       </div>
-
+      {/* <div>
+        {users.map((user) => (
+          <tr key={user.id} className="hover:bg-gray-50">
+            <td className="py-2 px-4 border-b">{user.id}</td>
+            <td className="py-2 px-4 border-b">{user.email}</td>
+            <td className="py-2 px-4 border-b">{user.username}</td>
+          </tr>
+        ))}
+      </div> */}
 
       {isPopupVisible && (
         <div
@@ -69,7 +113,7 @@ function Home() {
               &times;
             </button>
             <div
-            className="group p-4 flex items-center space-x-3 cursor-pointer relative overflow-hidden
+              className="group p-4 flex items-center space-x-3 cursor-pointer relative overflow-hidden
                       bg-neutral-800 text-gray-50 font-bold rounded-lg
                       before:absolute before:w-12 before:h-12 before:content-[''] before:right-1 before:top-1
                       before:z-10 before:bg-violet-500 before:rounded-full before:blur-lg
@@ -80,14 +124,14 @@ function Home() {
                       duration-500 before:duration-500 after:duration-500
                       group-hover:before:duration-500 group-hover:after:duration-500
                       transition">
-            My Box
+              My Box
+            </div>
           </div>
-          </div>
-          
+
         </div>
       )}
     </div>
   );
 }
 
-export default Home;
+// Removed duplicate export default statement

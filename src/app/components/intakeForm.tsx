@@ -13,7 +13,7 @@ export default function IntakeForm() {
   }[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [clientId, setClientId] = useState('123WER');
-  const [formType, setFormType] = useState<'intake' | 'view' | 'comment'>('intake');
+  const [formType, setFormType] = useState<'intake' | 'view'>('intake');
   const [previousAnswers, setPreviousAnswers] = useState<Record<number, string>>({});
   const [isEditing, setIsEditing] = useState(false);
 
@@ -24,7 +24,7 @@ export default function IntakeForm() {
       .then(setQuestions);
 
     if (formType === 'view') {
-      fetch(`/api/intake-submission?clientId=${clientId}`)
+      fetch(`/api/intake?clientId=${clientId}`)
         .then((res) => res.json())
         .then((data) => {
           console.log('Fetched previous submission data:', data);
@@ -96,31 +96,19 @@ export default function IntakeForm() {
         >
           View Details
         </button>
-        <button
-          onClick={() => setFormType('comment')}
-          className={`py-2 px-4 ${formType === 'comment' ? 'bg-blue-600 text-white' : 'bg-gray-200'} rounded-lg`}
-        >
-          Comments
-        </button>
       </div>
-  
-      {formType === 'comment' && (
-        <div className="mt-6">
-          <ReviewSection requirementVersionId={undefined} user={undefined} />
-        </div>
-      )}
-  
-      {formType !== 'comment' && (
+
+      {(
         <div className="max-w-5xl mx-auto p-6 bg-white rounded-2xl shadow-md space-y-6 mt-6">
           <h2 className="text-2xl font-semibold text-gray-800">
             {formType === 'intake' ? 'Intake Form' : 'View Details'}
           </h2>
-  
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {questions.map((q) => (
               <div key={q.id} className="space-y-2">
                 <label className="block text-gray-700 font-medium">{q.question}</label>
-  
+
                 {(formType === 'intake' || isEditing) ? (
                   q.fieldType === 'textarea' ? (
                     <textarea
@@ -193,7 +181,7 @@ export default function IntakeForm() {
               </div>
             ))}
           </div>
-  
+
           {formType === 'view' && !isEditing && (
             <button
               onClick={() => {
@@ -205,7 +193,7 @@ export default function IntakeForm() {
               Edit
             </button>
           )}
-  
+
           {(formType === 'intake' || isEditing) && (
             <button
               onClick={handleSubmit}
@@ -214,11 +202,15 @@ export default function IntakeForm() {
               Submit
             </button>
           )}
+
+          {formType === 'view' && (
+            <ReviewSection requirementVersionId={1} user={{ name: "John" }} />
+          )}
         </div>
       )}
     </div>
   );
-  
+
 }
 
 

@@ -91,11 +91,17 @@ async function main() {
       fieldType: "text",
     },
   });
-
   await prisma.intakeQuestion.create({
     data: {
       question:
-        "Upload any relevant reports or documents (e.g., assessments, school letters)",
+        "Can you explain your requirement",
+      fieldType: "textarea",
+    },
+  });
+  await prisma.intakeQuestion.create({
+    data: {
+      question:
+        "Upload any relevant reports or documents (e.g., financial statements, business plans, etc.) that can help us understand your requirements better.",
       fieldType: "file",
     },
   });

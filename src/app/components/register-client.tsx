@@ -7,7 +7,6 @@ export default function RegisterClient() {
     const [email, setEmail] = useState('');
     const [clientId, setClientId] = useState(''); 
     const [submitted, setSubmitted] = useState(false);
-    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

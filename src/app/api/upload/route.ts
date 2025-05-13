@@ -1,11 +1,12 @@
-// src/app/api/upload/route.ts
-import { NextRequest } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import formidable from 'formidable';
-import fs from 'fs';
-import path from 'path';
+// pages/api/upload.ts
+import { IncomingMessage } from "http";
+import { NextApiRequest, NextApiResponse } from "next";
+import { PrismaClient } from "@prisma/client";
+import formidable from "formidable";
+import os from "os";
+import path from "path";
 
-// Disable Next.js default body parsing
+// Disable default body parser
 export const config = {
   api: {
     bodyParser: false,
@@ -14,10 +15,11 @@ export const config = {
 
 const prisma = new PrismaClient();
 
-// Parse multipart form using formidable
-const parseForm = async (req: any): Promise<{ fields: any; files: any }> => {
+const parseForm = async (
+  req: IncomingMessage
+): Promise<{ fields: any; files: any }> => {
   const form = formidable({
-    uploadDir: path.join(process.cwd(), 'uploads'),
+    uploadDir: os.tmpdir(), 
     keepExtensions: true,
     maxFileSize: 10 * 1024 * 1024, // 10MB
   });
@@ -30,16 +32,19 @@ const parseForm = async (req: any): Promise<{ fields: any; files: any }> => {
   });
 };
 
-export async function POST(req: NextRequest) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
   try {
     const { fields, files } = await parseForm(req);
-
     const file = Array.isArray(files.file) ? files.file[0] : files.file;
     const questionId = parseInt(fields.questionId?.[0] || fields.questionId);
     const clientId = fields.clientId?.[0] || fields.clientId;
 
     if (!file || !questionId || !clientId) {
-      return new Response(JSON.stringify({ message: 'Missing file or data' }), { status: 400 });
+      return res.status(400).json({ message: "Missing file or data" });
     }
 
     // Step 1: Save intake answer
@@ -47,11 +52,11 @@ export async function POST(req: NextRequest) {
       data: {
         clientId,
         questionId,
-        answer: '',
+        answer: "",
       },
     });
 
-    // Step 2: Save file metadata
+    // Step 2: Save file metadata (path is in temp folder)
     await prisma.uploadFile.create({
       data: {
         intakeAnswerId: intakeAnswer.id,
@@ -59,13 +64,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return new Response(JSON.stringify({ message: 'File uploaded and saved!' }), {
-      status: 200,
-    });
+    return res.status(200).json({ message: "File uploaded and saved!" });
   } catch (error: any) {
-    console.error('Upload error:', error);
-    return new Response(JSON.stringify({ message: 'Upload failed', error: error.message }), {
-      status: 500,
-    });
+    console.error("Upload error:", error);
+    return res.status(500).json({ message: "Upload failed", error: error.message });
   }
 }

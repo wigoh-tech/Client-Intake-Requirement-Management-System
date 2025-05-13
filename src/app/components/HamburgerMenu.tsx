@@ -11,6 +11,13 @@ import {
   FiServer,
   FiPhone,
 } from 'react-icons/fi';
+import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs';
 import Home from './home';
 import { useUser } from '@clerk/nextjs';
 import IntakeForm from './intakeForm';
@@ -35,9 +42,8 @@ export default function HamburgerMenu() {
   return (
     <div className="min-h-screen">
       {/* Sidebar (Fixed) */}
-      <div
-        className={`fixed top-0 left-0 h-screen bg-gray-900 text-white transition-all duration-300 z-50 ${isOpen ? 'w-64' : 'w-24'}`}
-      >
+      <div className={`fixed top-0 left-0 h-screen duration-500 group overflow-hidden rounded-2xl bg-neutral-800 text-neutral-50 z-50 ${isOpen ? 'w-64' : 'w-24'}`}>
+      
         {/* Toggle Button */}
         <div
           className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''}`}
@@ -92,6 +98,27 @@ export default function HamburgerMenu() {
           <FiSettings size={24} />
           {isOpen && <span>Settings</span>}
         </div>
+
+        {/* LogIn SignUp signIn */}
+        <div className="p-4 flex flex-col items-center gap-4 mb-4">
+          <SignedOut>
+            <SignInButton>
+              <button className="w-full px-4 py-2 rounded-full border border-black bg-white text-black text-sm font-medium hover:shadow-[4px_4px_0px_0px_rgba(0,0,0)] hover:-translate-y-[1px] transition-all duration-200">
+                Sign In
+              </button>
+            </SignInButton>
+            <SignUpButton>
+              <button className="w-full px-4 py-2 rounded-full border border-black bg-black text-white text-sm font-medium hover:shadow-[4px_4px_0px_0px_rgba(0,0,0)] hover:-translate-y-[1px] transition-all duration-200">
+                Sign Up
+              </button>
+            </SignUpButton>
+          </SignedOut>
+
+          <SignedIn>
+            <UserButton />
+            {isOpen && <span>USER</span>}
+          </SignedIn>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -101,6 +128,8 @@ export default function HamburgerMenu() {
         {currentPage === 'intake-form' && (isSignedIn ? <IntakeForm /> : <Home />)}
         {currentPage === 'contact-us' && <ContactUs />}
       </div>
+
+
     </div>
   );
 }
