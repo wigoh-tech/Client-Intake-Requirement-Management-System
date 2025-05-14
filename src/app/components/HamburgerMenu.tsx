@@ -23,6 +23,7 @@ import { useUser } from '@clerk/nextjs';
 import IntakeForm from './intakeForm';
 import OurServices from './ourServices/page';
 import ContactUs from './contactUs/page';
+import Hero from './hero';
 
 export default function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -61,8 +62,8 @@ export default function HamburgerMenu() {
 
         {/* Mail */}
         <div
-          className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''}`}
-          onClick={() => handleMenuClick('')}>
+          className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('hero')}`}
+          onClick={() => handleMenuClick('hero')}>
           <FiMail size={24} />
           {isOpen && <span>Mail</span>}
         </div>
@@ -124,6 +125,7 @@ export default function HamburgerMenu() {
       {/* Main Content */}
       <div className={`transition-all duration-300 ml-24 ${isOpen ? 'ml-64' : 'ml-24'} p-6`}>
         {currentPage === 'home' && (isSignedIn ? <Home /> : <Home />)}
+        {currentPage === 'hero' && <Hero />}
         {currentPage === 'our-services' && <OurServices />}
         {currentPage === 'intake-form' && (isSignedIn ? <IntakeForm /> : <Home />)}
         {currentPage === 'contact-us' && <ContactUs />}

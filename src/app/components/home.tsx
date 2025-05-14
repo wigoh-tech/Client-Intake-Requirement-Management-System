@@ -37,13 +37,22 @@ export default function Home() {
         const res = await fetch('/api/user');
         const data = await res.json();
         setUsers(data);
+        console.log(data)
+
+        const currentUser = data.find((u: any) => u.email === user?.primaryEmailAddress?.emailAddress);
+        console.log("Current User:", currentUser);
+
+        if (currentUser?.status === 'clientloggedin') {
+          setIsDisabled(true);
+        }
       } catch (error) {
         console.error('Error loading users:', error);
       }
     }
-    fetchUsers();
-  }, []);
-
+    if (userId) {
+      fetchUsers();
+    }
+  }, [userId]);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
       <div className="max-w-7xl mx-auto mt-16 flex flex-col-reverse lg:flex-row items-center justify-between gap-12">
@@ -59,9 +68,11 @@ export default function Home() {
             👉 Start by registering your account, then add your project requirements to begin the intake process.
           </p>
           <p
-            onClick={handlePopupToggle}
+            onClick={() => {
+              if (!isDisabled) handlePopupToggle();
+            }}
             className={`inline-block px-6 py-3 font-medium rounded-xl shadow transition ${isDisabled
-              ? "bg-gray-400 text-white cursor-not-allowed"
+              ? "bg-gray-400 text-white cursor-not-allowed pointer-events-none"
               : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
           >
@@ -78,13 +89,9 @@ export default function Home() {
         </div>
 
 
-        <div className="lg:w-1/2 ">
-          <img
-            src="https://img.freepik.com/free-vector/gradient-sales-representative-illustration_23-2149322234.jpg?t=st=1746772836~exp=1746776436~hmac=1c66e3d8ed51f3f096a364804c5308fad91b281eb05e55332799c02cfecbdeb7&w=740"
-            alt="Client Intake Illustration"
-            className="w-full max-w-md mx-auto rounded-4xl"
-          />
-        </div>
+        <div className="w-full md:w-1/2 py-8">
+            <img src="https://www.svgrepo.com/show/493509/person-who-invests.svg" className="g-image" />
+          </div>
       </div>
       {/* <div>
         {users.map((user) => (
@@ -129,7 +136,7 @@ export default function Home() {
           </div>
 
         </div>
-      )}
+      )}    
     </div>
   );
 }

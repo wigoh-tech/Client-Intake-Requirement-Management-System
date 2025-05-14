@@ -52,21 +52,11 @@ CREATE TABLE "UploadFile" (
 );
 
 -- CreateTable
-CREATE TABLE "Requirement" (
-    "id" SERIAL NOT NULL,
-    "title" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-
-    CONSTRAINT "Requirement_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "RequirementVersion" (
     "id" SERIAL NOT NULL,
     "version" TEXT NOT NULL,
-    "content" TEXT NOT NULL,
+    "content" JSONB NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "requirementId" INTEGER NOT NULL,
 
     CONSTRAINT "RequirementVersion_pkey" PRIMARY KEY ("id")
 );
@@ -84,11 +74,11 @@ CREATE TABLE "Comment" (
 );
 
 -- CreateTable
-CREATE TABLE "_ClientToRequirement" (
+CREATE TABLE "_RequirementClient" (
     "A" TEXT NOT NULL,
     "B" INTEGER NOT NULL,
 
-    CONSTRAINT "_ClientToRequirement_AB_pkey" PRIMARY KEY ("A","B")
+    CONSTRAINT "_RequirementClient_AB_pkey" PRIMARY KEY ("A","B")
 );
 
 -- CreateIndex
@@ -101,7 +91,7 @@ CREATE UNIQUE INDEX "Client_email_key" ON "Client"("email");
 CREATE INDEX "IntakeAnswer_clientId_idx" ON "IntakeAnswer"("clientId");
 
 -- CreateIndex
-CREATE INDEX "_ClientToRequirement_B_index" ON "_ClientToRequirement"("B");
+CREATE INDEX "_RequirementClient_B_index" ON "_RequirementClient"("B");
 
 -- AddForeignKey
 ALTER TABLE "Client" ADD CONSTRAINT "Client_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -116,16 +106,13 @@ ALTER TABLE "IntakeAnswer" ADD CONSTRAINT "IntakeAnswer_questionId_fkey" FOREIGN
 ALTER TABLE "UploadFile" ADD CONSTRAINT "UploadFile_intakeAnswerId_fkey" FOREIGN KEY ("intakeAnswerId") REFERENCES "IntakeAnswer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "RequirementVersion" ADD CONSTRAINT "RequirementVersion_requirementId_fkey" FOREIGN KEY ("requirementId") REFERENCES "Requirement"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_requirementVersionId_fkey" FOREIGN KEY ("requirementVersionId") REFERENCES "RequirementVersion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_parentCommentId_fkey" FOREIGN KEY ("parentCommentId") REFERENCES "Comment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_ClientToRequirement" ADD CONSTRAINT "_ClientToRequirement_A_fkey" FOREIGN KEY ("A") REFERENCES "Client"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_RequirementClient" ADD CONSTRAINT "_RequirementClient_A_fkey" FOREIGN KEY ("A") REFERENCES "Client"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_ClientToRequirement" ADD CONSTRAINT "_ClientToRequirement_B_fkey" FOREIGN KEY ("B") REFERENCES "Requirement"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_RequirementClient" ADD CONSTRAINT "_RequirementClient_B_fkey" FOREIGN KEY ("B") REFERENCES "RequirementVersion"("id") ON DELETE CASCADE ON UPDATE CASCADE;

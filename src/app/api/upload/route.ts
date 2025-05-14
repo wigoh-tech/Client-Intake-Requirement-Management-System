@@ -1,12 +1,11 @@
 // pages/api/upload.ts
-import { IncomingMessage } from "http";
-import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
-import formidable from "formidable";
 import os from "os";
 import path from "path";
+import { NextResponse as NextServerResponse } from 'next/server';
+import { promisify } from 'util';
+import fs from 'fs';
 
-// Disable default body parser
 export const config = {
   api: {
     bodyParser: false,
@@ -15,58 +14,86 @@ export const config = {
 
 const prisma = new PrismaClient();
 
-const parseForm = async (
-  req: IncomingMessage
-): Promise<{ fields: any; files: any }> => {
-  const form = formidable({
-    uploadDir: os.tmpdir(), 
-    keepExtensions: true,
-    maxFileSize: 10 * 1024 * 1024, // 10MB
-  });
 
-  return new Promise((resolve, reject) => {
-    form.parse(req, (err, fields, files) => {
-      if (err) reject(err);
-      else resolve({ fields, files });
-    });
-  });
-};
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
+export async function POST(req: Request) {
 
   try {
-    const { fields, files } = await parseForm(req);
-    const file = Array.isArray(files.file) ? files.file[0] : files.file;
-    const questionId = parseInt(fields.questionId?.[0] || fields.questionId);
-    const clientId = fields.clientId?.[0] || fields.clientId;
+    console.log("reached upload api");
+    try{
+      const formData = await req.formData();
+      const file = formData.get('file') as File;
+      const clientId = formData.get('clientId') as string;
+      const Id = formData.get('questionId') as string;
+      const questionId = parseInt(Id);
+      const uploadedFile = file;
 
-    if (!file || !questionId || !clientId) {
-      return res.status(400).json({ message: "Missing file or data" });
+      if (!file) {
+        return new NextServerResponse(
+          JSON.stringify({ message: 'No file uploaded' }),
+          { status: 400 }
+        );}
+
+        const fileBuffer = await uploadedFile.arrayBuffer();
+        const fileContent = new Uint8Array(fileBuffer); 
+      // Step 1: Save intake answer
+      const intakeAnswer = await prisma.intakeAnswer.create({
+        data: {
+          clientId,
+          questionId,
+          answer: "",
+        }
+      });
+  
+      // Step 2: Save file metadata (path is in temp folder)
+      await prisma.uploadFile.create({
+        data: {
+          intakeAnswerId: intakeAnswer.id,
+          filePath: path.join(os.tmpdir(), file.name),
+          fileContent: fileContent,
+        },
+      });
+  
+      return new NextServerResponse(
+        JSON.stringify({ message: 'file uploaded' }),
+        { status: 200 }
+      );
+    }catch (error:any) {
+      console.error("Error parsing form:", error);
+      return new NextServerResponse(
+        JSON.stringify({ message: "Error parsing form" }),
+        { status: 500 }
+      );
     }
-
-    // Step 1: Save intake answer
-    const intakeAnswer = await prisma.intakeAnswer.create({
-      data: {
-        clientId,
-        questionId,
-        answer: "",
-      },
-    });
-
-    // Step 2: Save file metadata (path is in temp folder)
-    await prisma.uploadFile.create({
-      data: {
-        intakeAnswerId: intakeAnswer.id,
-        filePath: file.filepath,
-      },
-    });
-
-    return res.status(200).json({ message: "File uploaded and saved!" });
+   
   } catch (error: any) {
     console.error("Upload error:", error);
-    return res.status(500).json({ message: "Upload failed", error: error.message });
+    return new NextServerResponse(
+      JSON.stringify({ message: "Upload error" }),
+      { status: 500 }
+    );
+  }
+}
+
+
+
+export async function GET(req: Request) {
+  try {
+    const uploads = await prisma.uploadFile.findMany({
+      include: {
+        intakeAnswer: true, // if you want related info
+      },
+    });
+
+    return new Response(JSON.stringify(uploads), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching uploads:", error);
+    return new Response(JSON.stringify({ message: "Error fetching uploads" }), {
+      status: 500,
+    });
   }
 }

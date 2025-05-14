@@ -23,7 +23,7 @@ model Client {
   userName   String
   email      String          @unique
   answers    IntakeAnswer[]
-  requirements  Requirement[]
+  requirementVersions     RequirementVersion[]  @relation("RequirementClient")
 }
 
 model IntakeQuestion {
@@ -59,23 +59,14 @@ model UploadFile {
 }
 
 
-model Requirement {
-  id          Int                @id @default(autoincrement())
-  title       String
-  description String
-  clients     Client[]
-  versions    RequirementVersion[]
-}
-
 model RequirementVersion {
   id          Int          @id @default(autoincrement())
   version     String
-  content     String
+  content     Json
   createdAt   DateTime     @default(now())
-  requirement Requirement  @relation(fields: [requirementId], references: [id])
-  requirementId Int
+  clients     Client[]     @relation("RequirementClient")
   comments    Comment[]
-}
+} 
 
 model Comment {
   id              Int       @id @default(autoincrement())

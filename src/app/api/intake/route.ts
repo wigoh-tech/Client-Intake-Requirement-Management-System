@@ -5,70 +5,94 @@ import { prisma } from "@/lib/db";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { answers, clientId } = body;
+    const { answers, clientId, formType } = body;
 
     if (!clientId) {
-      return NextResponse.json({ message: 'Client ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { message: "Client ID is required" },
+        { status: 400 }
+      );
     }
 
     if (!Array.isArray(answers)) {
-      return NextResponse.json({ message: 'Answers should be an array' }, { status: 400 });
+      return NextResponse.json(
+        { message: "Answers should be an array" },
+        { status: 400 }
+      );
     }
 
-    // Save intake answers
-    const answerData = answers.map((ans: { questionId: number; answer: string }) => ({
-      questionId: ans.questionId,
-      answer: ans.answer,
-      clientId,
-    }));
+    if (formType === 'intake') {
+      // Store in both intakeAnswer and requirementVersion
+      const answerData = answers.map(
+        (ans: { questionId: number; answer: string }) => ({
+          questionId: ans.questionId,
+          answer: ans.answer,
+          clientId,
+        })
+      );
+      await prisma.intakeAnswer.createMany({ data: answerData });
+    }
 
-    await prisma.intakeAnswer.createMany({ data: answerData });
+    // Create version content using all answers (this applies to both modes)
+    const versionContent = answers
+      .map(
+        (ans: { questionId: number; answer: string }) =>
+          `Q${ans.questionId}: ${ans.answer}`
+      )
+      .join("\n");
 
-    // Find the requirement answer by questionId
-    const requirementAnswerObj = answers.find((ans: { questionId: number }) => ans.questionId === 14);
+    const existingVersions = await prisma.requirementVersion.findMany({
+      where: {
+        clients: {
+          some: { id: clientId },
+        },
+      },
+    });
 
-    if (requirementAnswerObj) {
-      const description = requirementAnswerObj.answer;
+    const newVersion = `v${existingVersions.length + 1}.0`;
 
-      const newRequirement = await prisma.requirement.create({
-        data: {
-          title: 'Client Requirement',
-          description,
-          clients: {
-            connect: {
-              id: clientId, 
-            },
+    // Store in requirementVersion
+    await prisma.requirementVersion.create({
+      data: {
+        version: newVersion,
+        content: versionContent, 
+        clients: {
+          connect: {
+            id: clientId,
           },
         },
-      });
+      },
+    });
 
-      // Create initial version
-      await prisma.requirementVersion.create({
-        data: {
-          version: 'v1.0',
-          content: description,
-          requirementId: newRequirement.id,
-        },
-      });
-    }
-
-    return NextResponse.json({ message: 'Answers submitted successfully' }, { status: 201 });
-
+    return NextResponse.json(
+      { message: "Answers submitted and version created successfully" },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error('Error submitting answers:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ message: 'Server error saving answers', error: errorMessage }, { status: 500 });
+    console.error("Error submitting answers:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json(
+      { message: "Server error saving answers", error: errorMessage },
+      { status: 500 }
+    );
   }
 }
 
+
+
 // Handle GET request for fetching answers
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl;
-    const clientId = searchParams.get('clientId');
+    const clientId = searchParams.get("clientId");
 
     if (!clientId) {
-      return NextResponse.json({ message: 'Client ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { message: "Client ID is required" },
+        { status: 400 }
+      );
     }
 
     // Fetch the answers for the given clientId
@@ -82,8 +106,12 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ answers });
   } catch (error) {
-    console.error('Error fetching answers:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ message: 'Server error fetching answers', error: errorMessage }, { status: 500 });
+    console.error("Error fetching answers:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json(
+      { message: "Server error fetching answers", error: errorMessage },
+      { status: 500 }
+    );
   }
 }

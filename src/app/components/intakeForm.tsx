@@ -16,41 +16,107 @@ export default function IntakeForm() {
   const [formType, setFormType] = useState<'intake' | 'view'>('intake');
   const [previousAnswers, setPreviousAnswers] = useState<Record<number, string>>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   useEffect(() => {
-    // Fetch intake questions
-    fetch('/api/intake-questions')
+    // Fetch questions
+    fetch("/api/intake-questions")
       .then((res) => res.json())
       .then(setQuestions);
 
-    if (formType === 'view') {
-      fetch(`/api/intake?clientId=${clientId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          console.log('Fetched previous submission data:', data);
-
+    // Fetch previous answers for this client
+    fetch(`/api/intake?clientId=${clientId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.answers) && data.answers.length > 0) {
+          setHasSubmitted(true);
           const filledAnswers: Record<number, string> = {};
-
-          if (Array.isArray(data.answers)) {
-            data.answers.forEach((submission: any) => {
-              filledAnswers[submission.questionId] = submission.answer;
-            });
-          }
-
+          data.answers.forEach((submission: any) => {
+            filledAnswers[submission.questionId] = submission.answer;
+          });
           setPreviousAnswers(filledAnswers);
           setAnswers(filledAnswers);
-        })
-        .catch((error) => console.error('Error fetching data:', error));
-    }
-  }, [formType, clientId]);
+        }
+      });
+  }, [clientId]);
 
   const handleSubmit = async () => {
+    if (formType === 'view' && isEditing) {
+      // Submit full intake answers in edit mode (for requirement version update)
+      const fullAnswers = Object.entries(answers).map(([questionId, answer]) => ({
+        questionId: parseInt(questionId, 10),
+        answer: typeof answer === 'string' ? answer.trim() : answer,
+      }));
+
+      try {
+        const res = await fetch('/api/intake', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientId,
+            answers: fullAnswers,
+          }),
+        });
+
+        if (res.ok) {
+          alert('Requirement version updated successfully!');
+          setIsEditing(false);
+
+          // ✅ Send email after successful update
+          const formattedAnswers = Object.entries(answers)
+            .map(([questionId, answer]) => `<p><strong>Q${questionId}:</strong> ${answer}</p>`)
+            .join('');
+
+          try {
+            const emailResponse = await fetch('/api/send-mail', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: 'misham.d24@gmail.com',
+                subject: `Intake Form Updated by Client ${clientId}`,
+                text: 'An intake form has been updated.',
+                html: `
+                  <h3>Updated Intake Form</h3>
+                  <p><strong>Client ID:</strong> ${clientId}</p>
+                  ${formattedAnswers}
+                  <p>Updated on: ${new Date().toLocaleString()}</p>
+                `,
+              }),
+            });
+
+            const contentType = emailResponse.headers.get('content-type');
+
+            if (emailResponse.ok && contentType?.includes('application/json')) {
+              const result = await emailResponse.json();
+              console.log('Email sent (update):', result);
+            } else {
+              const text = await emailResponse.text();
+              console.error('Unexpected response from /api/send-mail (update):', text);
+            }
+          } catch (error: any) {
+            console.error('Email send error (update):', error?.message || error);
+          }
+
+        } else {
+          const data = await res.json();
+          alert(`Error: ${data.message}`);
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        alert(`Network error: ${errorMessage}`);
+      }
+
+      return;
+    }
+
+    // Intake submission
     const submission = {
       clientId,
       answers: Object.entries(answers).map(([questionId, answer]) => ({
         questionId: parseInt(questionId, 10),
         answer: typeof answer === 'string' ? answer.trim() : answer,
       })),
+      formType,
       timestamp: new Date().toISOString(),
     };
 
@@ -66,6 +132,42 @@ export default function IntakeForm() {
         setAnswers({});
         setIsEditing(false);
         setFormType('view');
+
+        const formattedAnswers = Object.entries(answers)
+          .map(([questionId, answer]) => `<p><strong>Q${questionId}:</strong> ${answer}</p>`)
+          .join('');
+
+        try {
+          const emailResponse = await fetch('/api/send-mail', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: 'misham.d24@gmail.com',
+              subject: `New Intake Form Submitted by Client ${clientId}`,
+              text: 'A new intake form has been submitted.', // optional plain-text fallback
+              html: `
+              <h3>New Intake Form Submitted</h3>
+              <p><strong>Client ID:</strong> ${clientId}</p>
+              ${formattedAnswers}
+              <p>Submitted on: ${new Date().toLocaleString()}</p>
+            `,
+            }),
+          });
+
+          const contentType = emailResponse.headers.get('content-type');
+
+          if (emailResponse.ok && contentType?.includes('application/json')) {
+            const result = await emailResponse.json();
+            console.log('Email sent:', result);
+          } else {
+            const text = await emailResponse.text();
+            console.error('Unexpected response from /api/send-mail:', text);
+          }
+        } catch (error: any) {
+          console.error('Email send error:', error?.message || error);
+        }
+
+      } else {
         const data = await response.json();
         alert(`Error: ${data.message}`);
       }
@@ -78,15 +180,18 @@ export default function IntakeForm() {
   return (
     <div>
       <div className="flex space-x-4">
-        <button
-          onClick={() => {
-            setFormType('intake');
-            setIsEditing(false);
-          }}
-          className={`py-2 px-4 ${formType === 'intake' ? 'bg-blue-600 text-white' : 'bg-gray-200'} rounded-lg`}
-        >
-          Intake Form
-        </button>
+        {!hasSubmitted ? (
+          <button
+            onClick={() => {
+              setFormType('intake');
+              setIsEditing(false);
+            }}
+            className={`py-2 px-4 ${formType === 'intake' ? 'bg-blue-600 text-white' : 'bg-gray-200'} rounded-lg`}
+          >
+            Intake Form
+          </button>
+        ) : (
+          <button></button>)}
         <button
           onClick={() => {
             setFormType('view');
@@ -98,7 +203,7 @@ export default function IntakeForm() {
         </button>
       </div>
 
-      {(
+      {(formType === 'view' || (formType === 'intake' && !hasSubmitted)) && (
         <div className="max-w-5xl mx-auto p-6 bg-white rounded-2xl shadow-md space-y-6 mt-6">
           <h2 className="text-2xl font-semibold text-gray-800">
             {formType === 'intake' ? 'Intake Form' : 'View Details'}
@@ -208,6 +313,7 @@ export default function IntakeForm() {
           )}
         </div>
       )}
+
     </div>
   );
 
