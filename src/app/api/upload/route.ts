@@ -5,6 +5,7 @@ import path from "path";
 import { NextResponse as NextServerResponse } from 'next/server';
 import { promisify } from 'util';
 import fs from 'fs';
+import logger from "../utils/logger";
 
 export const config = {
   api: {
@@ -52,12 +53,13 @@ export async function POST(req: Request) {
           fileContent: fileContent,
         },
       });
-  
+      logger.info({ message: 'file uploaded' });
       return new NextServerResponse(
         JSON.stringify({ message: 'file uploaded' }),
         { status: 200 }
       );
     }catch (error:any) {
+      logger.error("Error parsing form:", error);
       console.error("Error parsing form:", error);
       return new NextServerResponse(
         JSON.stringify({ message: "Error parsing form" }),
@@ -66,6 +68,7 @@ export async function POST(req: Request) {
     }
    
   } catch (error: any) {
+    logger.error("Upload error:", error);
     console.error("Upload error:", error);
     return new NextServerResponse(
       JSON.stringify({ message: "Upload error" }),

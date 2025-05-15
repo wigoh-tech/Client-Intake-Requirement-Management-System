@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/db';
 import { nanoid } from 'nanoid'; 
+import logger from '../utils/logger';
 
 export async function POST(req: Request) {
     try {
@@ -36,10 +36,11 @@ export async function POST(req: Request) {
             });
             console.log(`Updated user ${user.id} status to clientloggedin`);
         }
-
+        logger.info('client register Successfully..', { status: 201 });
         return NextResponse.json(client, { status: 201 });
     } catch (error: any) {
         console.error('Error registering client:', error);
+        logger.error(error.errorMessage,{status: 500})
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -52,10 +53,14 @@ export async function GET() {
           email: true,
         },
       });
-  
+      logger.info('client data get Successfully..', { status: 200 });
       return NextResponse.json(clients, { status: 200 });
     } catch (error) {
       console.error('Error fetching clients:', error);
+      logger.error('Error fetching clients:', error ,{status: 500})
       return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
     }
   }
+
+
+  

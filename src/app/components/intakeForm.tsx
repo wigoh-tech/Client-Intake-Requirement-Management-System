@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import FileUpload from './uploadFile';
 import ReviewSection from '../components/review/page';
+import { useUser } from '@clerk/nextjs';
 
 export default function IntakeForm() {
   const [questions, setQuestions] = useState<{
@@ -12,11 +13,12 @@ export default function IntakeForm() {
     question: string;
   }[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [clientId, setClientId] = useState('123WER');
+  const [clientId, setClientId] = useState<string | null>(null);
   const [formType, setFormType] = useState<'intake' | 'view'>('intake');
   const [previousAnswers, setPreviousAnswers] = useState<Record<number, string>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const { user } = useUser();
 
   useEffect(() => {
     // Fetch questions
@@ -36,6 +38,7 @@ export default function IntakeForm() {
           });
           setPreviousAnswers(filledAnswers);
           setAnswers(filledAnswers);
+          setFormType('view');
         }
       });
   }, [clientId]);
@@ -240,7 +243,7 @@ export default function IntakeForm() {
                         ))}
                     </div>
                   ) : q.fieldType === 'file' ? (
-                    <FileUpload questionId={q.id} clientId={clientId} />
+                    <FileUpload questionId={q.id} clientId={clientId || ''} />
                   ) : (
                     <input
                       type={q.fieldType}
@@ -273,7 +276,7 @@ export default function IntakeForm() {
                         ))}
                     </div>
                   ) : q.fieldType === 'file' ? (
-                    <FileUpload questionId={q.id} clientId={clientId} />
+                    <FileUpload questionId={q.id} clientId={clientId || ''} />
                   ) : (
                     <input
                       type={q.fieldType}

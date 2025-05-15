@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FiMenu,
   FiHome,
@@ -24,15 +24,26 @@ import IntakeForm from './intakeForm';
 import OurServices from './ourServices/page';
 import ContactUs from './contactUs/page';
 import Hero from './hero';
+import Details from './details/page';
 
 export default function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen((prev) => !prev);
-  const { user, isSignedIn } = useUser();
-  const [currentPage, setCurrentPage] = useState('home');
+  const { isSignedIn } = useUser();
 
+  const [currentPage, setCurrentPage] = useState<string>('home');
+
+  useEffect(() => {
+    const savedPage = sessionStorage.getItem('currentPage');
+    if (savedPage) {
+      setCurrentPage(savedPage);
+    }
+  }, []);
+
+  
   const handleMenuClick = (page: string) => {
     setCurrentPage(page);
+    sessionStorage.setItem('currentPage', page);
     setIsOpen(false);
   };
 
@@ -65,7 +76,7 @@ export default function HamburgerMenu() {
           className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('hero')}`}
           onClick={() => handleMenuClick('hero')}>
           <FiMail size={24} />
-          {isOpen && <span>Mail</span>}
+          {isOpen && <span>About</span>}
         </div>
 
         {/* Our Services */}
@@ -94,8 +105,8 @@ export default function HamburgerMenu() {
 
         {/* Settings */}
         <div
-          className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('settings')}`}
-          onClick={() => handleMenuClick('settings')}>
+          className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('details')}`}
+          onClick={() => handleMenuClick('details')}>
           <FiSettings size={24} />
           {isOpen && <span>Settings</span>}
         </div>
@@ -128,6 +139,7 @@ export default function HamburgerMenu() {
         {currentPage === 'hero' && <Hero />}
         {currentPage === 'our-services' && <OurServices />}
         {currentPage === 'intake-form' && (isSignedIn ? <IntakeForm /> : <Home />)}
+        {currentPage === 'details' && <Details />}
         {currentPage === 'contact-us' && <ContactUs />}
       </div>
 

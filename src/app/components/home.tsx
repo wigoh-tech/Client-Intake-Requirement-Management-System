@@ -54,7 +54,7 @@ export default function Home() {
     }
   }, [userId]);
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+    <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6">
       <div className="max-w-7xl mx-auto mt-16 flex flex-col-reverse lg:flex-row items-center justify-between gap-12">
 
         <div className="lg:w-1/2">
@@ -136,7 +136,7 @@ export default function Home() {
           </div>
 
         </div>
-      )}    
+      )}      
     </div>
   );
 }

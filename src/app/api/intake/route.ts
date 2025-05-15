@@ -1,8 +1,19 @@
 // pages/api/intake-submission/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import logger from '../utils/logger';
+import { isRateLimited } from "../middleware/rateLimit"; 
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") || "unknown";
+
+  if (isRateLimited(ip)) {
+    logger.warn(`Rate limit exceeded for IP: ${ip}`);
+    return NextResponse.json(
+      { message: "Too many requests from this IP, please try again later." },
+      { status: 429 }
+    );
+  }
   try {
     const body = await req.json();
     const { answers, clientId, formType } = body;
@@ -63,7 +74,7 @@ export async function POST(req: NextRequest) {
         },
       },
     });
-
+    logger.info('Intake submitted successfully.');
     return NextResponse.json(
       { message: "Answers submitted and version created successfully" },
       { status: 201 }
@@ -72,6 +83,11 @@ export async function POST(req: NextRequest) {
     console.error("Error submitting answers:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
+      if (error instanceof Error) {
+        logger.error(`Submission failed: ${error.message}`);
+      } else {
+        logger.error("Submission failed: Unknown error");
+      }
     return NextResponse.json(
       { message: "Server error saving answers", error: errorMessage },
       { status: 500 }
@@ -85,17 +101,22 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = req.nextUrl;
-    const clientId = searchParams.get("clientId");
+    // Get the first clientId from intakeAnswer table
+    const firstAnswer = await prisma.intakeAnswer.findFirst({
+      select: { clientId: true },
+      orderBy: { timestamp: 'asc' }, // or whatever order you want
+    });
 
-    if (!clientId) {
+    if (!firstAnswer) {
       return NextResponse.json(
-        { message: "Client ID is required" },
-        { status: 400 }
+        { message: "No intake answers found" },
+        { status: 404 }
       );
     }
 
-    // Fetch the answers for the given clientId
+    const clientId = firstAnswer.clientId;
+
+    // Fetch answers for that clientId
     const answers = await prisma.intakeAnswer.findMany({
       where: { clientId },
       select: {
@@ -104,7 +125,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ answers });
+    return NextResponse.json({ clientId, answers });
   } catch (error) {
     console.error("Error fetching answers:", error);
     const errorMessage =

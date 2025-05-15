@@ -2,6 +2,8 @@
 import { NextResponse } from 'next/server';
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from '@/lib/db';
+import logger from '../utils/logger';
+import { error } from 'winston';
 
 export async function POST(req: Request) {
   try {
@@ -31,9 +33,10 @@ export async function POST(req: Request) {
         parentCommentId: parentCommentId ? Number(parentCommentId) : null,
       },
     });
-
+    logger.info(JSON.stringify(newComment), { status: 201 });
     return NextResponse.json(newComment, { status: 201 });
   } catch (error) {
+    logger.error("Internal Server Error", { status: 500 } );
     console.error("Error creating comment:", error);
     return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
@@ -58,13 +61,14 @@ export async function GET(req: Request) {
         createdAt: "asc",
       },
     });
-
+    logger.error("No comments found for this requirementVersionId" , { status: 404 });
     if (comments.length === 0) {
       return NextResponse.json({ message: "No comments found for this requirementVersionId" }, { status: 404 });
     }
 
     return NextResponse.json(comments);
   } catch (error) {
+    logger.error("Internal Server Error" , { status: 500 });
     console.error("Error fetching comments:", error);
     return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
@@ -103,16 +107,17 @@ export default async function handler(
           parentCommentId: parentCommentId ?? null,
         },
       });
-
+      logger.info('Message sent successfully', { status: 200 });
       return res.status(201).json({
         ...newComment,
         createdAt: newComment.createdAt.toISOString(),
       });
     } catch (error) {
+      logger.error("API error creating comment:", error, { status: 500 });
       console.error("API error creating comment:", error);
       return res.status(500).json({ message: "Internal Server Error" });
     }
   }
-
+  logger.error("Method Not Allowed", error, { status: 405 });
   return res.status(405).json({ message: "Method Not Allowed" });
 }
