@@ -1,11 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 
-export default function ReviewSection({ requirementVersionId, user }) {
+export default function ReviewSection({ requirementVersionId }) {
   const [activeTab, setActiveTab] = useState("comment");
   const [message, setMessage] = useState("");
   const [comments, setComments] = useState([]);
+  const { user } = useUser();
+  const currentUsername = user?.username || user?.firstName || "Unknown";
 
+  
   useEffect(() => {
     if (!requirementVersionId) return;
     fetch(`/api/comments?requirementVersionId=${requirementVersionId}`)
@@ -68,19 +72,19 @@ export default function ReviewSection({ requirementVersionId, user }) {
             <div>
               <h3 className="text-lg font-semibold mb-4">Conversation</h3>
               <div className="space-y-4 max-h-64 overflow-y-auto p-2 bg-gray-50 rounded ">
-                {Array.isArray(comments) &&
-                  comments.map((comment) => (
+              {Array.isArray(comments) &&
+                comments.map((comment) => {
+                  const isCurrentUser = comment.author === currentUsername;
+                  return (
                     <div
                       key={comment.id}
                       className={`flex ${
-                        comment.author === user.name
-                          ? "justify-end"
-                          : "justify-start"
+                        isCurrentUser ? "justify-end" : "justify-start"
                       }`}
                     >
                       <div
                         className={`px-4 py-2 rounded-lg max-w-md ${
-                          comment.author === user.name
+                          isCurrentUser
                             ? "bg-green-100 text-green-900"
                             : "bg-blue-100 text-blue-900"
                         }`}
@@ -88,7 +92,8 @@ export default function ReviewSection({ requirementVersionId, user }) {
                         {comment.content}
                       </div>
                     </div>
-                  ))}
+                  );
+                })}
               </div>
               <div className="mt-4 flex gap-2">
                 <input
@@ -112,8 +117,10 @@ export default function ReviewSection({ requirementVersionId, user }) {
             <div>
               <h3 className="text-lg font-semibold mb-4">Chat History</h3>
               <div className="space-y-3">
-                {Array.isArray(comments) &&
-                  comments.map((comment) => (
+              {Array.isArray(comments) &&
+                comments.map((comment) => {
+                  const isCurrentUser = comment.author === currentUsername;
+                  return (
                     <div key={comment.id}>
                       <div>
                         <p className="text-xs text-gray-500 mt-1">
@@ -121,7 +128,7 @@ export default function ReviewSection({ requirementVersionId, user }) {
                         </p>
                         <div
                           className={`px-4 py-2 rounded-lg max-w-md shadow-sm ${
-                            comment.author === user.name
+                            isCurrentUser
                               ? "bg-green-100 text-green-900"
                               : "bg-blue-100 text-blue-900"
                           }`}
@@ -136,7 +143,8 @@ export default function ReviewSection({ requirementVersionId, user }) {
                         </p>
                       </div>
                     </div>
-                  ))}
+                  );
+                })}
               </div>
             </div>
           )}

@@ -1,30 +1,61 @@
 // /src/app/api/comment/route.ts
-import { NextResponse } from 'next/server';
-import type { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from '@/lib/db';
-import logger from '../utils/logger';
-import { error } from 'winston';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import logger from "../utils/logger";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { content, author, requirementVersionId, parentCommentId } = body;
+    // 1. Clerk Authentication
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-    // Step 1: Ensure `requirementVersionId` exists in the database.
+    // 2. Parse and Validate Body
+    const body = await req.json();
+    const { content, requirementVersionId, parentCommentId } = body;
+
+    if (!content || !requirementVersionId) {
+      return NextResponse.json(
+        { message: "Missing required fields." },
+        { status: 400 }
+      );
+    }
+
+    // 3. Fetch Clerk User Info
+    const response = await fetch(`https://api.clerk.dev/v1/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Clerk API error:", errorText);
+      return NextResponse.json(
+        { message: "Failed to fetch user info." },
+        { status: 500 }
+      );
+    }
+
+    const clerkUser = await response.json();
+    const author =
+      clerkUser.username || clerkUser.first_name || clerkUser.id || "Unknown";
+
+    // 4. Check if requirement version exists
     const requirementVersion = await prisma.requirementVersion.findUnique({
-      where: { id: 1 },
+      where: { id: Number(requirementVersionId) },
     });
 
     if (!requirementVersion) {
-      return NextResponse.json({ message: "Requirement Version not found." }, { status: 404 });
+      return NextResponse.json(
+        { message: "Requirement Version not found." },
+        { status: 404 }
+      );
     }
 
-    // Step 2: Validate required fields
-    if (!content || !author || !requirementVersionId) {
-      return NextResponse.json({ message: "Missing required fields." }, { status: 400 });
-    }
-
-    // Step 3: Create the comment
+    // 5. Create Comment
     const newComment = await prisma.comment.create({
       data: {
         content,
@@ -33,12 +64,16 @@ export async function POST(req: Request) {
         parentCommentId: parentCommentId ? Number(parentCommentId) : null,
       },
     });
-    logger.info(JSON.stringify(newComment), { status: 201 });
+
+    logger?.info?.("Comment created successfully", { status: 201 });
     return NextResponse.json(newComment, { status: 201 });
   } catch (error) {
-    logger.error("Internal Server Error", { status: 500 } );
+    logger?.error?.("Error creating comment", { error, status: 500 });
     console.error("Error creating comment:", error);
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -48,7 +83,10 @@ export async function GET(req: Request) {
 
   // Validate requirementVersionId
   if (!requirementVersionId) {
-    return NextResponse.json({ message: "Missing requirementVersionId" }, { status: 400 });
+    return NextResponse.json(
+      { message: "Missing requirementVersionId" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -61,63 +99,23 @@ export async function GET(req: Request) {
         createdAt: "asc",
       },
     });
-    logger.error("No comments found for this requirementVersionId" , { status: 404 });
+    logger.error("No comments found for this requirementVersionId", {
+      status: 404,
+    });
     if (comments.length === 0) {
-      return NextResponse.json({ message: "No comments found for this requirementVersionId" }, { status: 404 });
+      return NextResponse.json(
+        { message: "No comments found for this requirementVersionId" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(comments);
   } catch (error) {
-    logger.error("Internal Server Error" , { status: 500 });
+    logger.error("Internal Server Error", { status: 500 });
     console.error("Error fetching comments:", error);
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
   }
-}
-
-
-type Data =
-  | { message: string }
-  | {
-      id: number;
-      content: string;
-      author: string;
-      createdAt: string;
-      requirementVersionId: number;
-      parentCommentId?: number | null;
-    };
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<Data>
-) {
-  if (req.method === "POST") {
-    const { content, author, requirementVersionId, parentCommentId } = req.body;
-
-    // Validate required fields
-    if (!content || !author || !requirementVersionId) {
-      return res.status(400).json({ message: "Missing required fields." });
-    }
-
-    try {
-      const newComment = await prisma.comment.create({
-        data: {
-          content,
-          author,
-          requirementVersionId: Number(requirementVersionId),
-          parentCommentId: parentCommentId ?? null,
-        },
-      });
-      logger.info('Message sent successfully', { status: 200 });
-      return res.status(201).json({
-        ...newComment,
-        createdAt: newComment.createdAt.toISOString(),
-      });
-    } catch (error) {
-      logger.error("API error creating comment:", error, { status: 500 });
-      console.error("API error creating comment:", error);
-      return res.status(500).json({ message: "Internal Server Error" });
-    }
-  }
-  logger.error("Method Not Allowed", error, { status: 405 });
-  return res.status(405).json({ message: "Method Not Allowed" });
 }

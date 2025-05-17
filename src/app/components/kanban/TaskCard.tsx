@@ -14,7 +14,7 @@ const getCardStyle = (columnId: string) => {
         background: '#e0e0e0',
         border: '1px solid #bdbdbd',
         color: '#555',
-        filter: 'blur(0.3px)', 
+        filter: 'blur(0.3px)',
       };
     case 'done':
       return {

@@ -13,6 +13,7 @@ model User {
   username String
   password String
   status   String? 
+  clerkId  String?
   clients  Client[] // ← ensure this matches your model
 }
 
@@ -63,6 +64,8 @@ model RequirementVersion {
   id          Int          @id @default(autoincrement())
   version     String
   content     Json
+  clerkId     String?
+  userName    String?
   createdAt   DateTime     @default(now())
   clients     Client[]     @relation("RequirementClient")
   comments    Comment[]

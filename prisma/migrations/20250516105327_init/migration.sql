@@ -5,6 +5,7 @@ CREATE TABLE "User" (
     "username" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "status" TEXT,
+    "clerkId" TEXT,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -56,6 +57,8 @@ CREATE TABLE "RequirementVersion" (
     "id" SERIAL NOT NULL,
     "version" TEXT NOT NULL,
     "content" JSONB NOT NULL,
+    "clerkId" TEXT,
+    "userName" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "RequirementVersion_pkey" PRIMARY KEY ("id")

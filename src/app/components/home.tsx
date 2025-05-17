@@ -30,7 +30,6 @@ export default function Home() {
     fetchClients();
   }, []);
 
-
   useEffect(() => {
     async function fetchUsers() {
       try {
@@ -54,14 +53,14 @@ export default function Home() {
     }
   }, [userId]);
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+    <div className="bg-gradient-to-br p-6">
       <div className="max-w-7xl mx-auto mt-16 flex flex-col-reverse lg:flex-row items-center justify-between gap-12">
 
         <div className="lg:w-1/2">
           <h1 className="text-5xl font-extrabold text-blue-800 leading-tight mb-6">
-            Welcome to the Client Intake App "{users.length > 0 ? users[0].username : 'Guest'}"
+          {userId && (`Welcome to the Client Intake App "${user?.username}"`)}
           </h1>
-          <p className="text-lg text-gray-700 mb-6">
+          <p className="text-lg mb-6">
             This platform helps you collect and manage client intake forms efficiently. Whether you're a therapist, consultant, or agency — streamline the intake process with our customizable forms and client tracking system.
           </p>
           <p className="text-lg text-blue-900 font-semibold mb-4">
@@ -80,7 +79,7 @@ export default function Home() {
           </p>
 
 
-          <div className="mt-8 text-gray-600">
+          <div className="mt-8">
             {userId && (
               <p>Hello,{user?.username} <span className="font-semibold text-blue-700">{userId}</span> — your active session is <span className="font-semibold">{sessionId}</span>.</p>
             )}
@@ -131,7 +130,6 @@ export default function Home() {
                       duration-500 before:duration-500 after:duration-500
                       group-hover:before:duration-500 group-hover:after:duration-500
                       transition">
-              My Box
             </div>
           </div>
 
@@ -141,4 +139,3 @@ export default function Home() {
   );
 }
 
-// Removed duplicate export default statement

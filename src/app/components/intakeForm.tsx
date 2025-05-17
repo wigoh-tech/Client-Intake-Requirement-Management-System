@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import FileUpload from './uploadFile';
 import ReviewSection from '../components/review/page';
-import { useUser } from '@clerk/nextjs';
 
 export default function IntakeForm() {
   const [questions, setQuestions] = useState<{
@@ -18,7 +17,14 @@ export default function IntakeForm() {
   const [previousAnswers, setPreviousAnswers] = useState<Record<number, string>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  const { user } = useUser();
+
+  useEffect(() => {
+    fetch("/api/get-client-id")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.clientId) setClientId(data.clientId);
+      });
+  }, []);
 
   useEffect(() => {
     // Fetch questions
@@ -43,6 +49,7 @@ export default function IntakeForm() {
       });
   }, [clientId]);
 
+  
   const handleSubmit = async () => {
     if (formType === 'view' && isEditing) {
       // Submit full intake answers in edit mode (for requirement version update)
@@ -312,7 +319,7 @@ export default function IntakeForm() {
           )}
 
           {formType === 'view' && (
-            <ReviewSection requirementVersionId={1} user={{ name: "John" }} />
+            <ReviewSection requirementVersionId={1} />
           )}
         </div>
       )}

@@ -1,8 +1,10 @@
-// pages/api/intake-submission/route.ts
+// pages/api/intake/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import logger from '../utils/logger';
-import { isRateLimited } from "../middleware/rateLimit"; 
+import logger from "../utils/logger";
+import { isRateLimited } from "../middleware/rateLimit";
+import { getAuth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") || "unknown";
@@ -14,42 +16,30 @@ export async function POST(req: NextRequest) {
       { status: 429 }
     );
   }
+
   try {
     const body = await req.json();
-    const { answers, clientId, formType } = body;
+    const { answers, clientId } = body;
 
     if (!clientId) {
-      return NextResponse.json(
-        { message: "Client ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "Client ID is required" }, { status: 400 });
     }
 
     if (!Array.isArray(answers)) {
-      return NextResponse.json(
-        { message: "Answers should be an array" },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "Answers should be an array" }, { status: 400 });
     }
 
-    if (formType === 'intake') {
-      // Store in both intakeAnswer and requirementVersion
-      const answerData = answers.map(
-        (ans: { questionId: number; answer: string }) => ({
-          questionId: ans.questionId,
-          answer: ans.answer,
-          clientId,
-        })
-      );
-      await prisma.intakeAnswer.createMany({ data: answerData });
-    }
+    const answerData = answers.map((ans: { questionId: number; answer: string }) => ({
+      questionId: ans.questionId,
+      answer: ans.answer,
+      clientId,
+    }));
 
-    // Create version content using all answers (this applies to both modes)
+    // ✅ Always store in intakeAnswer
+    await prisma.intakeAnswer.createMany({ data: answerData });
+
     const versionContent = answers
-      .map(
-        (ans: { questionId: number; answer: string }) =>
-          `Q${ans.questionId}: ${ans.answer}`
-      )
+      .map((ans: { questionId: number; answer: string }) => `Q${ans.questionId}: ${ans.answer}`)
       .join("\n");
 
     const existingVersions = await prisma.requirementVersion.findMany({
@@ -62,32 +52,34 @@ export async function POST(req: NextRequest) {
 
     const newVersion = `v${existingVersions.length + 1}.0`;
 
-    // Store in requirementVersion
+    const { userId } = getAuth(req);
+    const user = await currentUser();
+    if (!user?.username || !user.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // ✅ Always store in requirementVersion
     await prisma.requirementVersion.create({
       data: {
         version: newVersion,
-        content: versionContent, 
+        content: versionContent,
+        clerkId: userId,
+        userName: user.username,
         clients: {
-          connect: {
-            id: clientId,
-          },
+          connect: { id: clientId },
         },
       },
     });
-    logger.info('Intake submitted successfully.');
+
+    logger.info("Answers and version saved successfully.");
     return NextResponse.json(
       { message: "Answers submitted and version created successfully" },
       { status: 201 }
     );
   } catch (error) {
     console.error("Error submitting answers:", error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-      if (error instanceof Error) {
-        logger.error(`Submission failed: ${error.message}`);
-      } else {
-        logger.error("Submission failed: Unknown error");
-      }
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    logger.error(`Submission failed: ${errorMessage}`);
     return NextResponse.json(
       { message: "Server error saving answers", error: errorMessage },
       { status: 500 }
@@ -96,38 +88,58 @@ export async function POST(req: NextRequest) {
 }
 
 
-
 // Handle GET request for fetching answers
 
 export async function GET(req: NextRequest) {
   try {
-    // Get the first clientId from intakeAnswer table
-    const firstAnswer = await prisma.intakeAnswer.findFirst({
-      select: { clientId: true },
-      orderBy: { timestamp: 'asc' }, // or whatever order you want
+    const clientId = req.nextUrl.searchParams.get("clientId");
+
+    if (!clientId) {
+      return NextResponse.json({ message: "Missing clientId" }, { status: 400 });
+    }
+
+    // 1. Confirm the client exists
+    const clientRecord = await prisma.client.findUnique({
+      where: { id: clientId },
+      select: { id: true },
     });
 
-    if (!firstAnswer) {
+    if (!clientRecord) {
       return NextResponse.json(
-        { message: "No intake answers found" },
+        { message: "Client not found for provided clientId" },
         { status: 404 }
       );
     }
 
-    const clientId = firstAnswer.clientId;
-
-    // Fetch answers for that clientId
-    const answers = await prisma.intakeAnswer.findMany({
+    // 2. Get latest timestamp of intake answers
+    const latestTimestamp = await prisma.intakeAnswer.findFirst({
       where: { clientId },
+      orderBy: { timestamp: "desc" },
+      select: { timestamp: true },
+    });
+
+    if (!latestTimestamp) {
+      return NextResponse.json(
+        { message: "No intake answers found for client" },
+        { status: 404 }
+      );
+    }
+
+    // 3. Get latest answers
+    const latestAnswers = await prisma.intakeAnswer.findMany({
+      where: {
+        clientId,
+        timestamp: latestTimestamp.timestamp,
+      },
       select: {
         questionId: true,
         answer: true,
       },
     });
 
-    return NextResponse.json({ clientId, answers });
+    return NextResponse.json({ clientId, answers: latestAnswers });
   } catch (error) {
-    console.error("Error fetching answers:", error);
+    console.error("Error fetching latest answers:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(

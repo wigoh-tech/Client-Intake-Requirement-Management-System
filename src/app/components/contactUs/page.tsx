@@ -2,13 +2,8 @@ import React from "react";
 
 const ContactUs = () => {
   return (
-    <section
-      className="relative bg-cover bg-center bg-no-repeat py-20 px-6 sm:px-10"
-      style={{
-        backgroundImage: "url('/images/contact-background.jpg')", // Replace with your actual image path
-      }}
-    >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div>
+      <div className="absolute inset-0 backdrop-blur-sm"></div>
 
       <div className="relative z-10 max-w-4xl mx-auto text-white">
         <h2 className="text-4xl font-bold text-center mb-10">Contact Us</h2>
@@ -69,7 +64,7 @@ const ContactUs = () => {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

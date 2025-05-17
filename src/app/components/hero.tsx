@@ -24,9 +24,9 @@ function Hero() {
             className="absolute -z-[1] backdrop-blur-sm inset-0 w-full h-full flex before:content-[''] before:h-3/4 before:w-full before:bg-gradient-to-r before:from-black before:to-purple-600 before:blur-[90px] after:content-[''] after:h-1/2 after:w-full after:bg-gradient-to-br after:from-cyan-400 after:to-sky-300 after:blur-[90px]"
           ></span>
         </div>
-        <div className='flex flex-row justify-around items-center mt-20'>
+        <div className='flex flex-col md:flex-row justify-around items-center mt-20'>
           <Client />
-          <aside className="bg-black text-white p-6 rounded-lg w-full max-w-lg font-mono">
+          <aside className="bg-black text-white p-6 rounded-lg w-full mt-10  md:mt-0 max-w-lg font-mono">
             <div className="flex justify-between items-center">
               <div className="flex space-x-2 text-red-500">
                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
