@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import logger from "../utils/logger";
 import { auth } from "@clerk/nextjs/server";
 
+
+
 export async function POST(req: Request) {
   try {
     // 1. Clerk Authentication
@@ -12,7 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. Parse and Validate Body
+    // 2. Parse Body
     const body = await req.json();
     const { content, requirementVersionId, parentCommentId } = body;
 
@@ -43,7 +45,7 @@ export async function POST(req: Request) {
     const author =
       clerkUser.username || clerkUser.first_name || clerkUser.id || "Unknown";
 
-    // 4. Check if requirement version exists
+    // 4. Check requirement version exists
     const requirementVersion = await prisma.requirementVersion.findUnique({
       where: { id: Number(requirementVersionId) },
     });
@@ -62,7 +64,14 @@ export async function POST(req: Request) {
         author,
         requirementVersionId: Number(requirementVersionId),
         parentCommentId: parentCommentId ? Number(parentCommentId) : null,
+        sender: author,
       },
+    });
+
+    await fetch("http://localhost:4000/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newComment),
     });
 
     logger?.info?.("Comment created successfully", { status: 201 });
@@ -81,7 +90,6 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const requirementVersionId = url.searchParams.get("requirementVersionId");
 
-  // Validate requirementVersionId
   if (!requirementVersionId) {
     return NextResponse.json(
       { message: "Missing requirementVersionId" },
@@ -90,18 +98,11 @@ export async function GET(req: Request) {
   }
 
   try {
-    // Fetch comments for the given requirementVersionId
     const comments = await prisma.comment.findMany({
-      where: {
-        requirementVersionId: Number(requirementVersionId),
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
+      where: { requirementVersionId: Number(requirementVersionId) },
+      orderBy: { createdAt: "asc" },
     });
-    logger.error("No comments found for this requirementVersionId", {
-      status: 404,
-    });
+
     if (comments.length === 0) {
       return NextResponse.json(
         { message: "No comments found for this requirementVersionId" },

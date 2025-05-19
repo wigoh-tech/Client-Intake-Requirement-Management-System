@@ -81,4 +81,5 @@ model Comment {
   parentCommentId Int?
   parentComment   Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
   replies         Comment[] @relation("CommentReplies")
+  sender    String
 }

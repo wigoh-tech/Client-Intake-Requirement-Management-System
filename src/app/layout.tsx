@@ -12,12 +12,12 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
-<html lang="en" className="dark" style={{ colorScheme: "dark" }}>
+      <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            {children}
           </ThemeProvider>
-          </body>
+        </body>
       </html>
     </ClerkProvider>
   );

@@ -14,6 +14,7 @@ import LogintoClient from './additional/logintoClient';
 import { FaBarsProgress, FaWpforms, FaCircleInfo } from "react-icons/fa6";
 import { GrServices } from "react-icons/gr";
 import { ModeToggle } from './mode-toggle';
+import CommentBox from './admin/commentBox';
 
 export default function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -150,7 +151,8 @@ export default function HamburgerMenu() {
         {currentPage === 'our-services' && <OurServices />}
         {currentPage === 'intake-form' && (isSignedIn && hasClientId ? <IntakeForm /> : <LogintoClient />)}
         {currentPage === 'details' && <Details />}
-        {currentPage === 'contact-us' && <ContactUs />}
+        {/* {currentPage === 'contact-us' && <ContactUs />} */}
+        {currentPage === 'details' && <CommentBox requirementVersionId={1} />}
       </div>
 
 
