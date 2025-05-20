@@ -12,8 +12,9 @@ model User {
   email    String   @unique
   username String
   password String
+  role     String?
   status   String? 
-  clerkId  String?
+  clerkId  String?  @unique
   clients  Client[] // ← ensure this matches your model
 }
 
@@ -25,6 +26,7 @@ model Client {
   email      String          @unique
   answers    IntakeAnswer[]
   requirementVersions     RequirementVersion[]  @relation("RequirementClient")
+  requirements Requirement[]
 }
 
 model IntakeQuestion {
@@ -48,6 +50,25 @@ model IntakeAnswer {
   question   IntakeQuestion  @relation(fields: [questionId], references: [id])
   uploadedFiles UploadFile[]
 }
+
+model Requirement {
+  id         Int      @id @default(autoincrement())
+  clientId   String
+  answer     String   // Answer to question 14
+  createdAt  DateTime @default(now())
+  status     RequirementStatus @default(todo)
+
+  client     Client   @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
+}
+
+enum RequirementStatus {
+  todo
+  inProgress
+  done
+}
+
 
 model UploadFile {
   id              Int           @id @default(autoincrement())

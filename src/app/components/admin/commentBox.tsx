@@ -38,8 +38,22 @@ export default function CommentBox({ requirementVersionId }: { requirementVersio
     // Initial comment fetch
     fetch(`/api/comments?requirementVersionId=${requirementVersionId}`)
       .then((res) => res.json())
-      .then((data: Comment[]) => setComments(data))
-      .catch((err) => console.error("Fetch comments error:", err));
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setComments(data);
+        } else if (data?.message === "No comments found for this requirementVersionId") {
+          // Treat as no comments, don’t log error
+          setComments([]);
+        } else {
+          console.error("Invalid data format for comments:", data);
+          setComments([]);
+        }
+      })
+      
+      .catch((err) => {
+        console.error("Fetch comments error:", err);
+        setComments([]);
+      });
 
     const handleNewComment = (comment: Comment) => {
       if (comment.requirementVersionId === requirementVersionId) {
@@ -71,7 +85,7 @@ export default function CommentBox({ requirementVersionId }: { requirementVersio
 
       if (!res.ok) throw new Error("Failed to send comment");
 
-      setMessage("");
+      setMessage(""); // Clear input
     } catch (err) {
       console.error("Send error:", err);
     }
@@ -79,25 +93,17 @@ export default function CommentBox({ requirementVersionId }: { requirementVersio
 
   return (
     <div className="p-4 border rounded-lg">
+      {/* Tabs */}
       <div className="flex space-x-4 pb-2">
         <button
           onClick={() => setActiveTab("comment")}
-          className={`py-1 px-3 ${
-            activeTab === "comment" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
-          }`}
+          className={`py-1 px-3 ${activeTab === "comment" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"}`}
         >
           Comment
         </button>
-        <button
-          onClick={() => setActiveTab("history")}
-          className={`py-1 px-3 ${
-            activeTab === "history" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
-          }`}
-        >
-          History
-        </button>
       </div>
 
+      {/* Comment List */}
       <div className="space-y-4 max-h-64 overflow-y-auto p-2 bg-gray-50 rounded">
         {comments.map((comment) => {
           const isCurrentUser = comment.author === currentUsername;
@@ -107,9 +113,8 @@ export default function CommentBox({ requirementVersionId }: { requirementVersio
               className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`px-4 py-2 rounded-lg max-w-md break-words ${
-                  isCurrentUser ? "bg-green-100 text-green-900" : "bg-blue-100 text-blue-900"
-                }`}
+                className={`px-4 py-2 rounded-lg max-w-md break-words ${isCurrentUser ? "bg-green-100 text-green-900" : "bg-blue-100 text-blue-900"
+                  }`}
               >
                 {comment.content}
               </div>
@@ -117,6 +122,8 @@ export default function CommentBox({ requirementVersionId }: { requirementVersio
           );
         })}
       </div>
+
+      {/* Input Box */}
       <div className="mt-4 flex gap-2">
         <input
           type="text"
@@ -132,5 +139,3 @@ export default function CommentBox({ requirementVersionId }: { requirementVersio
     </div>
   );
 }
-
-

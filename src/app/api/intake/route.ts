@@ -29,17 +29,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Answers should be an array" }, { status: 400 });
     }
 
-    const answerData = answers.map((ans: { questionId: number; answer: string }) => ({
-      questionId: ans.questionId,
-      answer: ans.answer,
-      clientId,
-    }));
-
-    // ✅ Always store in intakeAnswer
+    // ✅ Save intake answers
+    const answerData = answers.map(
+      (ans: { questionId: number; answer: string }) => ({
+        questionId: ans.questionId,
+        answer: ans.answer,
+        clientId,
+      })
+    );
     await prisma.intakeAnswer.createMany({ data: answerData });
 
+    // ✅ Extract and save Q14's answer if not already stored
+    const question14Answer = answers.find((ans) => ans.questionId === 14);
+    if (!question14Answer) {
+      return NextResponse.json({ message: "Answer for question 14 is required" }, { status: 400 });
+    }
+
+    const existingRequirement = await prisma.requirement.findFirst({
+      where: { clientId },
+    });
+
+    if (!existingRequirement) {
+      await prisma.requirement.create({
+        data: {
+          clientId,
+          answer: question14Answer.answer,
+          status: "todo",
+        },
+      });
+    }
+
+    // ✅ Build requirement version content
     const versionContent = answers
-      .map((ans: { questionId: number; answer: string }) => `Q${ans.questionId}: ${ans.answer}`)
+      .map((ans) => `Q${ans.questionId}: ${ans.answer}`)
       .join("\n");
 
     const existingVersions = await prisma.requirementVersion.findMany({
@@ -52,13 +74,14 @@ export async function POST(req: NextRequest) {
 
     const newVersion = `v${existingVersions.length + 1}.0`;
 
+    // ✅ Get authenticated user
     const { userId } = getAuth(req);
     const user = await currentUser();
     if (!user?.username || !user.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // ✅ Always store in requirementVersion
+    // ✅ Save requirement version
     await prisma.requirementVersion.create({
       data: {
         version: newVersion,
@@ -95,7 +118,10 @@ export async function GET(req: NextRequest) {
     const clientId = req.nextUrl.searchParams.get("clientId");
 
     if (!clientId) {
-      return NextResponse.json({ message: "Missing clientId" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Missing clientId" },
+        { status: 400 }
+      );
     }
 
     // 1. Confirm the client exists

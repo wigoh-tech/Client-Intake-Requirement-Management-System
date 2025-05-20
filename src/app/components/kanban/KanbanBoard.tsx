@@ -1,71 +1,108 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import Column from './Column';
 
-const initialData = {
-  todo: [{ id: 'task-1', content: 'Draft Requirement' }],
-  inProgress: [
-    { id: 'task-2', content: 'Client Feedback' },
-    { id: 'task-3', content: 'Follow Up' },
-  ],
-  done: [{ id: 'task-4', content: 'Finalized' }],
+type Task = {
+  id: string;
+  content: string;
+  client: {
+    userName: string;
+    email: string;
+  };
+};
+
+type ColumnType = {
+  [key in 'todo' | 'inProgress' | 'done']: Task[];
 };
 
 const KanbanBoard = () => {
-  const [columns, setColumns] = useState<{
-    [key in 'todo' | 'inProgress' | 'done']: { id: string; content: string }[];
-  }>(initialData);
+  const [columns, setColumns] = useState<ColumnType>({
+    todo: [],
+    inProgress: [],
+    done: [],
+  });
 
-  const onDragEnd = (result: DropResult) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/requirement'); 
+        const data = await res.json();
+
+ 
+        const grouped: ColumnType = {
+          todo: [],
+          inProgress: [],
+          done: [],
+        };
+
+        data.forEach((item: any) => {
+          const task: Task = {
+            id: String(item.id),
+            content: item.answer,
+            client: item.client,
+          };
+
+          const status = item.status as keyof ColumnType;
+          if (grouped[status]) {
+            grouped[status].push(task);
+          }
+        });
+
+        setColumns(grouped);
+      } catch (error) {
+        console.error('Error loading requirements:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const onDragEnd = async (result: DropResult) => {
     const { source, destination } = result;
-
     if (!destination) return;
-
+  
     if (
       source.droppableId === destination.droppableId &&
       source.index === destination.index
-    ) {
-      return; // dropped in the same place, no changes needed
-    }
+    )
+      return;
+  
+    const sourceColumn = source.droppableId as keyof ColumnType;
+    const destColumn = destination.droppableId as keyof ColumnType;
+  
+    const sourceTasks = Array.from(columns[sourceColumn]);
+    const destinationTasks = Array.from(columns[destColumn]);
+    const [movedTask] = sourceTasks.splice(source.index, 1);
+  
+    destinationTasks.splice(destination.index, 0, movedTask);
+  
+    setColumns({
+      ...columns,
+      [sourceColumn]: sourceTasks,
+      [destColumn]: destinationTasks,
+    });
+  
 
-    if (source.droppableId === destination.droppableId) {
-      // Reordering within the same column
-      const columnTasks = Array.from(
-        columns[source.droppableId as keyof typeof columns]
-      );
-      const [movedTask] = columnTasks.splice(source.index, 1);
-      columnTasks.splice(destination.index, 0, movedTask);
-
-      setColumns({
-        ...columns,
-        [source.droppableId]: columnTasks,
-      });
-    } else {
-      // Moving between different columns
-      const sourceTasks = Array.from(
-        columns[source.droppableId as keyof typeof columns]
-      );
-      const destinationTasks = Array.from(
-        columns[destination.droppableId as keyof typeof columns]
-      );
-
-      const [movedTask] = sourceTasks.splice(source.index, 1);
-      destinationTasks.splice(destination.index, 0, movedTask);
-
-      setColumns({
-        ...columns,
-        [source.droppableId]: sourceTasks,
-        [destination.droppableId]: destinationTasks,
-      });
+    try {
+      await fetch(`/api/requirement/${movedTask.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: destColumn }),
+      });      
+    } catch (error) {
+      console.error('Failed to update status in DB:', error);
     }
   };
+  
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div style={{ display: 'flex', gap: '16px' }}>
-        {Object.entries(columns).map(([key, items]) => (
-          <Column key={key} columnId={key} tasks={items} />
+        {Object.entries(columns).map(([key, tasks]) => (
+          <Column key={key} columnId={key} tasks={tasks} />
         ))}
       </div>
     </DragDropContext>

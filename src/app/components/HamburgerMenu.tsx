@@ -22,7 +22,7 @@ export default function HamburgerMenu() {
   const { isSignedIn } = useUser();
   const [hasClientId, setHasClientId] = useState<boolean | null>(null)
   const [currentPage, setCurrentPage] = useState<string>('home');
-
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   useEffect(() => {
     const savedPage = sessionStorage.getItem('currentPage');
     if (savedPage) {
@@ -51,9 +51,19 @@ export default function HamburgerMenu() {
         setHasClientId(false)
       }
     }
-
+    const fetchUserRole = async () => {
+      try {
+        const res = await fetch('/api/user/user-role');
+        if (!res.ok) throw new Error('Could not get role');
+        const data = await res.json();
+        setIsAdmin(data.role === 'admin');
+      } catch (err) {
+        setIsAdmin(false);
+      }
+    };
     if (isSignedIn) {
       checkClientId()
+      fetchUserRole();
     }
   }, [isSignedIn])
   return (
@@ -111,12 +121,14 @@ export default function HamburgerMenu() {
         </div>
 
         {/* Settings */}
-        <div
-          className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('details')}`}
-          onClick={() => handleMenuClick('details')}>
-          <FaBarsProgress size={24} />
-          {isOpen && <span>Settings</span>}
-        </div>
+        {isAdmin === true && (
+          <div
+            className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('details')}`}
+            onClick={() => handleMenuClick('details')}>
+            <FaBarsProgress size={24} />
+            {isOpen && <span>Admin Page</span>}
+          </div>
+        )}
 
         <div className="p-4 flex flex-col items-center gap-4 mb-4">
           <ModeToggle />
