@@ -92,15 +92,6 @@ export default function Home() {
             <img src="https://www.svgrepo.com/show/493509/person-who-invests.svg" className="g-image" />
           </div>
       </div>
-      {/* <div>
-        {users.map((user) => (
-          <tr key={user.id} className="hover:bg-gray-50">
-            <td className="py-2 px-4 border-b">{user.id}</td>
-            <td className="py-2 px-4 border-b">{user.email}</td>
-            <td className="py-2 px-4 border-b">{user.username}</td>
-          </tr>
-        ))}
-      </div> */}
 
       {isPopupVisible && (
         <div

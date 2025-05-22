@@ -14,8 +14,6 @@ import LogintoClient from './additional/logintoClient';
 import { FaBarsProgress, FaWpforms, FaCircleInfo } from "react-icons/fa6";
 import { GrServices } from "react-icons/gr";
 import { ModeToggle } from './mode-toggle';
-import CommentBox from './admin/commentBox';
-
 export default function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen((prev) => !prev);
@@ -40,32 +38,35 @@ export default function HamburgerMenu() {
     return currentPage === page ? 'text-blue-500' : '';
   };
   useEffect(() => {
-    const checkClientId = async () => {
+    const checkAccess = async () => {
       try {
-        const res = await fetch('/api/get-client-id')
-        if (!res.ok) throw new Error('Client not found')
-        const data = await res.json()
-        console.log("first", data)
-        setHasClientId(!!data.clientId)
+        // 1. Fetch the user role
+        const resRole = await fetch('/api/user/user-role');
+        if (!resRole.ok) throw new Error('Could not get role');
+        const dataRole = await resRole.json();
+        const isAdminUser = dataRole.role === 'admin';
+        setIsAdmin(isAdminUser);
+
+        // 2. Only check for client ID if not admin
+        if (!isAdminUser) {
+          const resClient = await fetch('/api/get-client-id');
+          if (!resClient.ok) throw new Error('Client not found');
+          const dataClient = await resClient.json();
+          console.log("Client Data:", dataClient);
+          setHasClientId(!!dataClient.clientId);
+        }
       } catch (err) {
-        setHasClientId(false)
-      }
-    }
-    const fetchUserRole = async () => {
-      try {
-        const res = await fetch('/api/user/user-role');
-        if (!res.ok) throw new Error('Could not get role');
-        const data = await res.json();
-        setIsAdmin(data.role === 'admin');
-      } catch (err) {
+        console.error(err);
+        setHasClientId(false);
         setIsAdmin(false);
       }
     };
+
     if (isSignedIn) {
-      checkClientId()
-      fetchUserRole();
+      checkAccess();
     }
-  }, [isSignedIn])
+  }, [isSignedIn]);
+
   return (
     <div className="min-h-screen">
       {/* Sidebar (Fixed) */}
@@ -87,13 +88,14 @@ export default function HamburgerMenu() {
         </div>
 
         {/* Intake Question */}
-        <div
-          className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('intake-form')}`}
-          onClick={() => handleMenuClick('intake-form')}>
-          <FaWpforms size={24} />
-          {isOpen && <span>Intake Question</span>}
-        </div>
-
+        {!isAdmin === true && (
+          <div
+            className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('intake-form')}`}
+            onClick={() => handleMenuClick('intake-form')}>
+            <FaWpforms size={24} />
+            {isOpen && <span>Intake Question</span>}
+          </div>
+        )}
         {/* About */}
         <div
           className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('hero')}`}
@@ -163,8 +165,7 @@ export default function HamburgerMenu() {
         {currentPage === 'our-services' && <OurServices />}
         {currentPage === 'intake-form' && (isSignedIn && hasClientId ? <IntakeForm /> : <LogintoClient />)}
         {currentPage === 'details' && <Details />}
-        {/* {currentPage === 'contact-us' && <ContactUs />} */}
-        {currentPage === 'details' && <CommentBox requirementVersionId={1} />}
+        {currentPage === 'contact-us' && <ContactUs />}
       </div>
 
 

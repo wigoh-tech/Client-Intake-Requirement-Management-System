@@ -1,68 +1,116 @@
 // /src/app/api/comment/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import logger from "../utils/logger";
 import { auth } from "@clerk/nextjs/server";
 
-  export async function POST(req: Request) {
-    try {
-      // 1. Clerk Authentication
-      const { userId } = await auth();
-      if (!userId) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-      }
+export async function POST(req: Request) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-      // 2. Parse Body
-      const body = await req.json();
-      const { content, requirementVersionId, parentCommentId } = body;
+    const body = await req.json();
+    const { content: newMessageText, requirementVersionId } = body;
 
-      if (!content || !requirementVersionId) {
+    if (!newMessageText) {
+      return NextResponse.json(
+        { message: "Missing required field: content." },
+        { status: 400 }
+      );
+    }
+
+    const response = await fetch(`https://api.clerk.dev/v1/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return NextResponse.json({ message: "Clerk error: " + errorText }, { status: 500 });
+    }
+
+    const clerkUser = await response.json();
+
+    const user = await prisma.user.findFirst({
+      where: { clerkId: userId },
+      include: {
+        clients: {
+          include: {
+            requirementVersions: {
+              orderBy: { createdAt: "desc" },
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ message: "User not found in DB" }, { status: 404 });
+    }
+
+    let finalRequirementVersionId = requirementVersionId;
+    if (!finalRequirementVersionId) {
+      const firstClient = user.clients[0];
+      if (!firstClient || firstClient.requirementVersions.length === 0) {
         return NextResponse.json(
-          { message: "Missing required fields." },
+          { message: "No requirement version found for this client." },
           { status: 400 }
         );
       }
 
-      // 3. Fetch Clerk User Info
-      const response = await fetch(`https://api.clerk.dev/v1/users/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+      finalRequirementVersionId = firstClient.requirementVersions[0].id;
+    }
+
+    const sender = {
+      name: clerkUser.username || clerkUser.first_name || clerkUser.id || "Unknown",
+      email: clerkUser.email_addresses?.[0]?.email_address || "no-email@example.com",
+      role: user.role === "admin" ? "admin" : "client",
+    };
+
+    const message = {
+      sender,
+      message: newMessageText,
+      time: new Date().toISOString(),
+    };
+
+    // Check if comment thread exists
+    const existingComment = await prisma.comment.findFirst({
+      where: {
+        userId: user.id,
+        requirementVersionId: Number(finalRequirementVersionId),
+      },
+    });
+
+    if (existingComment) {
+      const updatedContent = Array.isArray(existingComment.content)
+        ? [...existingComment.content, message]
+        : [message];
+
+      const updatedComment = await prisma.comment.update({
+        where: { id: existingComment.id },
+        data: {
+          content: updatedContent,
         },
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Clerk API error:", errorText);
-        return NextResponse.json(
-          { message: "Failed to fetch user info." },
-          { status: 500 }
-        );
-      }
-
-      const clerkUser = await response.json();
-      const author =
-        clerkUser.username || clerkUser.first_name || clerkUser.id || "Unknown";
-
-      // 4. Check requirement version exists
-      const requirementVersion = await prisma.requirementVersion.findUnique({
-        where: { id: Number(requirementVersionId) },
+      await fetch("http://localhost:4000/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedComment),
       });
 
-      if (!requirementVersion) {
-        return NextResponse.json(
-          { message: "Requirement Version not found." },
-          { status: 404 }
-        );
-      }
-
-      // 5. Create Comment
+      return NextResponse.json(updatedComment, { status: 200 });
+    } else {
       const newComment = await prisma.comment.create({
         data: {
-          content,
-          author,
-          requirementVersionId: Number(requirementVersionId),
-          parentCommentId: parentCommentId ? Number(parentCommentId) : null,
-          sender: author,
+          content: [message],
+          author: sender,
+          sender,
+          requirementVersionId: Number(finalRequirementVersionId),
+          userId: user.id,
         },
       });
 
@@ -72,58 +120,109 @@ import { auth } from "@clerk/nextjs/server";
         body: JSON.stringify(newComment),
       });
 
-      logger?.info?.("Comment created successfully", { status: 201 });
       return NextResponse.json(newComment, { status: 201 });
-    } catch (error) {
-      logger?.error?.("Error creating comment", { error, status: 500 });
-      console.error("Error creating comment:", error);
-      return NextResponse.json(
-        { message: "Internal Server Error" },
-        { status: 500 }
-      );
     }
+  } catch (error) {
+    console.error("Error saving comment:", error);
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
+}
+
+
+
+// export async function GET(req: Request) {
+//   const { userId } = await auth();
+//   if (!userId) {
+//     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+//   }
+
+//   const url = new URL(req.url);
+//   const requirementVersionId = url.searchParams.get("requirementVersionId");
+
+//   if (!requirementVersionId) {
+//     return NextResponse.json(
+//       { message: "Missing requirementVersionId" },
+//       { status: 400 }
+//     );
+//   }
+
+//   try {
+//     const comments = await prisma.comment.findMany({
+//       where: {
+//         requirementVersionId: Number(requirementVersionId),
+//       },
+//       orderBy: {
+//         createdAt: "asc",
+//       },
+//       select: {
+//         id: true,
+//         content: true,
+//         createdAt: true,
+//         author: true,
+//         sender: true,
+//       },
+//     });
+
+//     return NextResponse.json(comments);
+//   } catch (error) {
+//     console.error("Error fetching comments:", error);
+//     return NextResponse.json(
+//       { message: "Internal Server Error" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
+type Sender = {
+  name: string;
+  role: string;
+  email: string;
+};
+
+type Message = {
+  sender: Sender;
+  message: string;
+  time: string;
+};
 
 export async function GET(req: Request) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  const url = new URL(req.url);
-  const requirementVersionId = url.searchParams.get("requirementVersionId");
+  const { searchParams } = new URL(req.url);
+  const requirementVersionId = Number(searchParams.get("requirementVersionId"));
 
   if (!requirementVersionId) {
-    return NextResponse.json(
-      { message: "Missing requirementVersionId" },
-      { status: 400 }
-    );
+    return NextResponse.json({ message: "requirementVersionId is required" }, { status: 400 });
   }
 
   try {
+    const { userId } = await auth();
+    if (!userId) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
     const comments = await prisma.comment.findMany({
-      where: {
-        requirementVersionId: Number(requirementVersionId),
-        parentCommentId: null,
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-      select: {
-        id: true,
-        content: true,
-        createdAt: true,
-        author: true,
-        sender: true,
-      },
+      where: { requirementVersionId },
     });
 
-    return NextResponse.json(comments);
-  } catch (error) {
-    console.error("Error fetching comments:", error);
-    return NextResponse.json(
-      { message: "Internal Server Error" },
-      { status: 500 }
-    );
+    if (!comments.length) {
+      return NextResponse.json({ message: "No comments found", content: [] }, { status: 200 });
+    }
+
+    // 🛠️ Fix: Safely cast each content to Message[]
+    const allMessages: Message[] = comments.flatMap((comment) => {
+      const content = comment.content as unknown;
+      if (Array.isArray(content)) {
+        return content as Message[];
+      }
+      return [];
+    });
+
+    allMessages.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+
+    return NextResponse.json({ content: allMessages }, { status: 200 });
+  } catch (err) {
+    console.error("Fetch comments error:", err);
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
+
+
+

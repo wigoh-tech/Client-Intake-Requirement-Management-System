@@ -3,67 +3,97 @@ import React from "react";
 const ContactUs = () => {
   return (
     <div>
-      <div className="absolute inset-0 backdrop-blur-sm"></div>
+      <section className="py-10 h-full flex items-center px-4 ">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
 
-      <div className="relative z-10 max-w-4xl mx-auto text-white">
-        <h2 className="text-4xl font-bold text-center mb-10">Contact Us</h2>
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold leading-tight">
+              Have You Any Project? <br />
+              <span>Please Drop a Message</span>
+            </h2>
+            <p className="mt-4">
+              Get in touch and let me know how I can help. Fill out the form and
+              I'll be in touch as soon as possible.
+            </p>
 
-        <div className="bg-white/80 rounded-2xl p-8 text-gray-800 shadow-lg">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              alert("Lead captured! Email sent to Shreya.");
-              // You can integrate email logic here using form backend or services like Formspree, Resend, etc.
-            }}
-            className="space-y-6"
-          >
-            <div>
-              <label className="block mb-2 font-medium">Name</label>
-              <input
-                type="text"
-                className="w-full px-4 py-2 rounded border border-gray-300 focus:ring focus:outline-none"
-                required
-              />
+            <div className="mt-6 space-y-4">
+              <div className="flex items-start space-x-4">
+                <span className="text-xl text-gray-400">📍</span>
+                <div>
+                  <p className="font-semibold">Address:</p>
+                  <p className="text-gray-400">89/9 Mothijheel, Dhaka, Bangladesh.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <span className="text-xl text-gray-400">📞</span>
+                <div>
+                  <p className="font-semibold">Phone:</p>
+                  <p className="text-gray-400">+8801799568976</p>
+                  <p className="text-gray-400">+8801904015294</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <span className="text-xl text-gray-400">✉️</span>
+                <div>
+                  <p className="font-semibold">Email:</p>
+                  <p className="text-gray-400">support@abdul.com</p>
+                  <p className="text-gray-400">abdulbasetbappy@hotmail.com</p>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block mb-2 font-medium">Email</label>
-              <input
-                type="email"
-                className="w-full px-4 py-2 rounded border border-gray-300 focus:ring focus:outline-none"
-                required
-              />
-            </div>
 
-            <div>
-              <label className="block mb-2 font-medium">Message</label>
-              <textarea
-                rows={4}
-                className="w-full px-4 py-2 rounded border border-gray-300 focus:ring focus:outline-none"
-                required
-              ></textarea>
-            </div>
-
-            <button
-              type="submit"
-              className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold shadow-md"
-            >
-              Send Message
-            </button>
-          </form>
-
-          <div className="mt-10 text-sm">
-            <p><strong>Phone:</strong> +91-XXXXXXXXXX</p>
-            <p><strong>Email:</strong> contact@example.com</p>
-            <p><strong>Address:</strong> 123, Your Street, Your City, Country</p>
-            <div className="mt-4 flex gap-4">
-              <a href="#" className="hover:underline text-blue-700">Facebook</a>
-              <a href="#" className="hover:underline text-blue-700">Instagram</a>
-              <a href="#" className="hover:underline text-blue-700">LinkedIn</a>
+            <div className="mt-6 flex justify-center lg:justify-start gap-4">
+              <a href="#"
+                className="group relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-neutral-950 text-neutral-200 hover:w-32 transition-all overflow-hidden">
+                <span className="hidden group-hover:inline whitespace-nowrap mr-2">GitHub</span>🐙
+              </a>
+              <a href="#"
+                className="group relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-900 text-neutral-200 hover:w-36 transition-all overflow-hidden">
+                <span className="hidden group-hover:inline whitespace-nowrap mr-2">LinkedIn</span>💼
+              </a>
+              <a href="#"
+                className="group relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-700 text-neutral-200 hover:w-36 transition-all overflow-hidden">
+                <span className="hidden group-hover:inline whitespace-nowrap mr-2">Facebook</span>📘
+              </a>
+              <a href="#"
+                className="group relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-red-800 text-neutral-200 hover:w-36 transition-all overflow-hidden">
+                <span className="hidden group-hover:inline whitespace-nowrap mr-2">YouTube</span>▶️
+              </a>
             </div>
           </div>
+
+          <div className="p-8 rounded-xl shadow-lg border-2">
+            <form>
+              <div className="mb-4">
+                <label className="block mb-2">Name</label>
+                <input type="text" placeholder="e.g John Doe" className="w-full px-4 py-3 text-white rounded-lg border border-gray-600 outline-none" />
+              </div>
+
+              <div className="mb-4">
+                <label className="block mb-2">Email<span className="text-xs">(Required)</span></label>
+                <input type="email" placeholder="e.g johndoe@mail.com" className="w-full px-4 py-3 text-white rounded-lg border border-gray-600 outline-none" />
+              </div>
+
+              <div className="mb-4">
+                <label className="block mb-2">Phone</label>
+                <input type="tel" placeholder="Phone Number" className="w-full px-4 py-3 rounded-lg border border-gray-600 outline-none" />
+              </div>
+
+              <div className="mb-4">
+                <label className="block  mb-2">Message<span className="text-xs">(Required)</span></label>
+                <textarea placeholder="Write message..." className="w-full px-4 py-3  rounded-lg border border-gray-600 outline-none h-24"></textarea>
+              </div>
+
+              <button type="submit" className="w-full bg-white text-gray-900 font-semibold py-3 rounded-lg hover:bg-gray-300 transition">
+                SEND
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

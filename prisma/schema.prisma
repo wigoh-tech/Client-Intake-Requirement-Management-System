@@ -8,57 +8,58 @@ datasource db {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  email    String   @unique
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
   username String
   password String
   role     String?
-  status   String? 
-  clerkId  String?  @unique
-  clients  Client[] // ← ensure this matches your model
+  status   String?
+  clerkId  String?   @unique
+  clients  Client[]
+  comments Comment[] // One-to-many relation: User → Comment
 }
 
 model Client {
-  id         String          @id @default(dbgenerated()) // or use nanoid in code
-  userId     Int?
-  user       User?            @relation(fields: [userId], references: [id])
-  userName   String
-  email      String          @unique
-  answers    IntakeAnswer[]
-  requirementVersions     RequirementVersion[]  @relation("RequirementClient")
-  requirements Requirement[]
+  id                  String               @id @default(dbgenerated()) // or use nanoid in code
+  userId              Int?
+  user                User?                @relation(fields: [userId], references: [id])
+  userName            String
+  email               String               @unique
+  answers             IntakeAnswer[]
+  requirementVersions RequirementVersion[] @relation("RequirementClient")
+  requirements        Requirement[]
 }
 
 model IntakeQuestion {
-  id       Int             @id @default(autoincrement())
-  question String
-  fieldType String   
-  options   String?         // e.g. "text", "radio", "textarea"
-  answers  IntakeAnswer[]
+  id        Int            @id @default(autoincrement())
+  question  String
+  fieldType String
+  options   String? // e.g. "text", "radio", "textarea"
+  answers   IntakeAnswer[]
 }
 
 model IntakeAnswer {
-  id         Int             @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   clientId   String
   questionId Int
   answer     String
-  timestamp DateTime @default(now())
-  
-  @@index([clientId]) // Optional index to optimize queries
+  timestamp  DateTime @default(now())
 
-  client     Client          @relation(fields: [clientId], references: [id])
-  question   IntakeQuestion  @relation(fields: [questionId], references: [id])
+  client        Client         @relation(fields: [clientId], references: [id])
+  question      IntakeQuestion @relation(fields: [questionId], references: [id])
   uploadedFiles UploadFile[]
+
+  @@index([clientId]) // Optional index to optimize queries
 }
 
 model Requirement {
-  id         Int      @id @default(autoincrement())
-  clientId   String
-  answer     String   // Answer to question 14
-  createdAt  DateTime @default(now())
-  status     RequirementStatus @default(todo)
+  id        Int               @id @default(autoincrement())
+  clientId  String
+  answer    String // Answer to question 14
+  createdAt DateTime          @default(now())
+  status    RequirementStatus @default(todo)
 
-  client     Client   @relation(fields: [clientId], references: [id])
+  client Client @relation(fields: [clientId], references: [id])
 
   @@index([clientId])
 }
@@ -69,38 +70,39 @@ enum RequirementStatus {
   done
 }
 
-
 model UploadFile {
-  id              Int           @id @default(autoincrement())
-  intakeAnswerId  Int
+  id             Int @id @default(autoincrement())
+  intakeAnswerId Int
 
-  intakeAnswer    IntakeAnswer @relation(fields: [intakeAnswerId], references: [id])
-  filePath        String?
-  fileContent     Bytes?       // <-- for storing file in DB
-  createdAt       DateTime      @default(now())
+  intakeAnswer IntakeAnswer @relation(fields: [intakeAnswerId], references: [id])
+  filePath     String?
+  fileContent  Bytes? // <-- for storing file in DB
+  createdAt    DateTime     @default(now())
 }
 
-
 model RequirementVersion {
-  id          Int          @id @default(autoincrement())
-  version     String
-  content     Json
-  clerkId     String?
-  userName    String?
-  createdAt   DateTime     @default(now())
-  clients     Client[]     @relation("RequirementClient")
-  comments    Comment[]
-} 
+  id        Int       @id @default(autoincrement())
+  version   String
+  content   Json
+  clerkId   String?
+  userName  String?
+  createdAt DateTime  @default(now())
+  clients   Client[]  @relation("RequirementClient")
+  comments  Comment[] @relation("RequirementVersionComments")
+}
 
 model Comment {
-  id              Int       @id @default(autoincrement())
-  content         String
-  createdAt       DateTime  @default(now())
-  author              String
-  requirementVersion RequirementVersion @relation(fields: [requirementVersionId], references: [id])
+  id        Int      @id @default(autoincrement())
+  content   Json
+  reply     Json?
+  author    Json?
+  sender    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId Int 
+  user   User @relation(fields: [userId], references: [id])
+
   requirementVersionId Int
-  parentCommentId Int?
-  parentComment   Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
-  replies         Comment[] @relation("CommentReplies")
-  sender    String
+  requirementVersion   RequirementVersion @relation("RequirementVersionComments", fields: [requirementVersionId], references: [id])
 }

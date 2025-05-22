@@ -27,11 +27,12 @@ const getCardStyle = (columnId: string) => {
   }
 };
 
-const TaskCard = ({ task, index, columnId }: any) => {
+const TaskCard = ({ task, index, columnId ,onClick}: any) => {
   return (
     <Draggable draggableId={task.id} index={index}>
       {(provided) => (
         <div
+          onClick={onClick}
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}

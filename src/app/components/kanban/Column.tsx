@@ -1,9 +1,8 @@
 import React from 'react';
 import { Droppable } from '@hello-pangea/dnd';
-
 import TaskCard from './TaskCard';
 
-const Column = ({ columnId, tasks }: any) => {
+const Column = ({ columnId, tasks, onTaskClick }: any) => {
   return (
     <Droppable droppableId={columnId}>
       {(provided) => (
@@ -19,6 +18,7 @@ const Column = ({ columnId, tasks }: any) => {
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
             border: '1px solid #e0e0e0',
             transition: 'background 0.3s ease',
+            cursor: 'pointer',
           }}
         >
           <h4
@@ -38,9 +38,9 @@ const Column = ({ columnId, tasks }: any) => {
               task={task}
               index={index}
               columnId={columnId}
+              onClick={() => onTaskClick(task)}
             />
           ))}
-
           {provided.placeholder}
         </div>
       )}

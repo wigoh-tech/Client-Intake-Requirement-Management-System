@@ -7,7 +7,7 @@ import cors from "cors";
 const app = express();
 
 app.use(cors({
-  origin: "https://master-unicorn-morally.ngrok-free.app",
+  origin: "http://localhost:4000",
   methods: ["GET", "POST"],
 }));
 app.use(express.json());
@@ -16,7 +16,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "https://master-unicorn-morally.ngrok-free.app",
+    origin: "http://localhost:4000",
     methods: ["GET", "POST"],
   },
 });

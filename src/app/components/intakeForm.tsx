@@ -1,10 +1,14 @@
-
-'use client'
-import { useEffect, useState } from 'react';
+'use client';
+import { useEffect, useMemo, useState } from 'react';
 import FileUpload from './uploadFile';
 import ReviewSection from '../components/review/page';
 
-export default function IntakeForm() {
+export default function IntakeForm({ showOnlyView = false,
+  clientId: passedClientId,
+}: {
+  showOnlyView?: boolean;
+  clientId?: string;
+}) {
   const [questions, setQuestions] = useState<{
     options: string | boolean;
     fieldType: string;
@@ -19,21 +23,28 @@ export default function IntakeForm() {
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   useEffect(() => {
-    fetch("/api/get-client-id")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.clientId) setClientId(data.clientId);
-      });
-  }, []);
+    if (passedClientId) {
+      setClientId(passedClientId);
+    } else {
+      fetch("/api/get-client-id")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.clientId) setClientId(data.clientId);
+        });
+    }
+  }, [passedClientId]);
+
+  const stableClientId = useMemo(() => clientId, [clientId]);
+
 
   useEffect(() => {
-    // Fetch questions
+    if (!stableClientId) return;
+
     fetch("/api/intake-questions")
       .then((res) => res.json())
       .then(setQuestions);
 
-    // Fetch previous answers for this client
-    fetch(`/api/intake?clientId=${clientId}`)
+    fetch(`/api/intake?clientId=${stableClientId}`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data.answers) && data.answers.length > 0) {
@@ -44,15 +55,15 @@ export default function IntakeForm() {
           });
           setPreviousAnswers(filledAnswers);
           setAnswers(filledAnswers);
-          setFormType('view');
+          setFormType("view");
         }
       });
-  }, [clientId]);
+  }, [stableClientId]);
 
-  
+
+
   const handleSubmit = async () => {
     if (formType === 'view' && isEditing) {
-      // Submit full intake answers in edit mode (for requirement version update)
       const fullAnswers = Object.entries(answers).map(([questionId, answer]) => ({
         questionId: parseInt(questionId, 10),
         answer: typeof answer === 'string' ? answer.trim() : answer,
@@ -154,7 +165,7 @@ export default function IntakeForm() {
             body: JSON.stringify({
               to: 'misham.d24@gmail.com',
               subject: `New Intake Form Submitted by Client ${clientId}`,
-              text: 'A new intake form has been submitted.', // optional plain-text fallback
+              text: 'A new intake form has been submitted.',
               html: `
               <h3>New Intake Form Submitted</h3>
               <p><strong>Client ID:</strong> ${clientId}</p>
@@ -190,7 +201,7 @@ export default function IntakeForm() {
   return (
     <div>
       <div className="flex space-x-4">
-        {!hasSubmitted ? (
+        {!showOnlyView && !hasSubmitted && (
           <button
             onClick={() => {
               setFormType('intake');
@@ -200,8 +211,8 @@ export default function IntakeForm() {
           >
             Intake Form
           </button>
-        ) : (
-          <button></button>)}
+        )}
+
         <button
           onClick={() => {
             setFormType('view');
@@ -318,7 +329,7 @@ export default function IntakeForm() {
             </button>
           )}
 
-          {formType === 'view' && (
+          {(formType === 'view' || showOnlyView) && (
             <ReviewSection requirementVersionId={1} />
           )}
         </div>

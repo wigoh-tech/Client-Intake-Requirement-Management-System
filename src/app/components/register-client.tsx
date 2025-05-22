@@ -1,6 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function RegisterClient() {
     const [userName, setUserName] = useState('');
