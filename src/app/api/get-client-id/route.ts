@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
   const user = await prisma.user.findMany({
     where: { clerkId },
-    select: { id: true },
+    select: { id: true , email: true, },
   });
 
   if (!user) {

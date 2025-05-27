@@ -28,6 +28,7 @@ model Client {
   answers             IntakeAnswer[]
   requirementVersions RequirementVersion[] @relation("RequirementClient")
   requirements        Requirement[]
+  assignedForm        AssignedForm?        @relation("ClientAssignedForm")
 }
 
 model IntakeQuestion {
@@ -100,9 +101,26 @@ model Comment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId Int 
+  userId Int
   user   User @relation(fields: [userId], references: [id])
 
   requirementVersionId Int
   requirementVersion   RequirementVersion @relation("RequirementVersionComments", fields: [requirementVersionId], references: [id])
 }
+
+model userNotification {
+  id        Int      @id @default(autoincrement())
+  clientId  String
+  message   String
+  formId    Int
+  createdAt DateTime @default(now())
+  isRead    Boolean  @default(false)
+}
+
+model formAssignments {
+  id          Int      @id @default(autoincrement())
+  clientId    String
+  questionIds Int[]
+  createdAt   DateTime @default(now())
+}
+

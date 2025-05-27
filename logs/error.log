@@ -308,3 +308,11 @@
 [2025-05-19T08:13:33.336Z] ERROR: No comments found for this requirementVersionId
 [2025-05-19T08:13:33.472Z] ERROR: No comments found for this requirementVersionId
 [2025-05-21T10:00:49.985Z] ERROR: Error creating comment
+[2025-05-26T02:45:35.924Z] ERROR: Submission failed: Clerk: getAuth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+-  clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+[2025-05-26T02:47:24.634Z] ERROR: Submission failed: db_1.prisma.requirementVersion.create is not a function

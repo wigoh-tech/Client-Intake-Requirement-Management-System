@@ -9,11 +9,12 @@ import IntakeForm from './intakeForm';
 import OurServices from './ourServices/page';
 import ContactUs from './contactUs/page';
 import Hero from './hero';
-import Details from './details/page';
 import LogintoClient from './additional/logintoClient';
 import { FaBarsProgress, FaWpforms, FaCircleInfo } from "react-icons/fa6";
 import { GrServices } from "react-icons/gr";
 import { ModeToggle } from './mode-toggle';
+import Clientpage from './clientpage';
+import Admin from './admin';
 export default function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen((prev) => !prev);
@@ -35,7 +36,7 @@ export default function HamburgerMenu() {
   };
 
   const getActiveClass = (page: string) => {
-    return currentPage === page ? 'text-blue-500' : '';
+    return currentPage === page ? 'text-violet-500' : '';
   };
   useEffect(() => {
     const checkAccess = async () => {
@@ -88,13 +89,23 @@ export default function HamburgerMenu() {
         </div>
 
         {/* Intake Question */}
-        {!isAdmin === true && (
+        {isAdmin === true && (
           <div
             className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('intake-form')}`}
             onClick={() => handleMenuClick('intake-form')}>
             <FaWpforms size={24} />
             {isOpen && <span>Intake Question</span>}
           </div>
+        )}
+
+        {/* Client Question */}
+        {isAdmin === false && (
+        <div
+          className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('Client-form')}`}
+          onClick={() => handleMenuClick('Client-form')}>
+          <FaWpforms size={24} />
+          {isOpen && <span>Intake Question</span>}
+        </div>
         )}
         {/* About */}
         <div
@@ -125,8 +136,8 @@ export default function HamburgerMenu() {
         {/* Settings */}
         {isAdmin === true && (
           <div
-            className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('details')}`}
-            onClick={() => handleMenuClick('details')}>
+            className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('Admin')}`}
+            onClick={() => handleMenuClick('Admin')}>
             <FaBarsProgress size={24} />
             {isOpen && <span>Admin Page</span>}
           </div>
@@ -163,8 +174,9 @@ export default function HamburgerMenu() {
         {currentPage === 'home' && (isSignedIn ? <Home /> : <LogintoClient />)}
         {currentPage === 'hero' && <Hero />}
         {currentPage === 'our-services' && <OurServices />}
-        {currentPage === 'intake-form' && (isSignedIn && hasClientId ? <IntakeForm /> : <LogintoClient />)}
-        {currentPage === 'details' && <Details />}
+        {currentPage === 'Client-form' && <Clientpage />}
+        {currentPage === 'Admin' && <Admin />}
+        {currentPage === 'intake-form' && <IntakeForm />}
         {currentPage === 'contact-us' && <ContactUs />}
       </div>
 

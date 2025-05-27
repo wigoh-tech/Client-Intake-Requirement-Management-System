@@ -1232,3 +1232,99 @@
 [2025-05-22T07:22:43.936Z] INFO: client data get Successfully..
 [2025-05-22T10:10:21.538Z] INFO: client data get Successfully..
 [2025-05-22T10:10:22.046Z] INFO: client data get Successfully..
+[2025-05-22T10:34:09.831Z] INFO: client data get Successfully..
+[2025-05-22T10:34:09.920Z] INFO: client data get Successfully..
+[2025-05-22T10:35:21.419Z] INFO: client data get Successfully..
+[2025-05-22T10:35:21.518Z] INFO: client data get Successfully..
+[2025-05-22T10:44:59.446Z] INFO: client data get Successfully..
+[2025-05-22T10:44:59.526Z] INFO: client data get Successfully..
+[2025-05-22T10:45:57.137Z] INFO: client data get Successfully..
+[2025-05-22T10:45:57.221Z] INFO: client data get Successfully..
+[2025-05-22T10:46:47.561Z] INFO: client register Successfully..
+[2025-05-22T10:49:18.549Z] INFO: Answers and version saved successfully.
+[2025-05-22T10:49:24.063Z] INFO: Email sent
+[2025-05-22T10:56:11.736Z] INFO: client data get Successfully..
+[2025-05-22T10:56:11.795Z] INFO: client data get Successfully..
+[2025-05-26T02:10:11.204Z] INFO: client data get Successfully..
+[2025-05-26T02:10:11.253Z] INFO: client data get Successfully..
+[2025-05-26T02:45:35.924Z] ERROR: Submission failed: Clerk: getAuth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:
+-  clerkMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+[2025-05-26T02:47:24.634Z] ERROR: Submission failed: db_1.prisma.requirementVersion.create is not a function
+[2025-05-26T02:49:18.352Z] INFO: Answers and version saved successfully.
+[2025-05-26T02:53:29.931Z] INFO: Answers and version saved successfully.
+[2025-05-26T04:12:03.239Z] INFO: client data get Successfully..
+[2025-05-26T04:12:03.302Z] INFO: client data get Successfully..
+[2025-05-26T08:21:17.540Z] INFO: client data get Successfully..
+[2025-05-26T08:21:17.728Z] INFO: client data get Successfully..
+[2025-05-26T08:21:26.391Z] INFO: client data get Successfully..
+[2025-05-26T08:21:26.480Z] INFO: client data get Successfully..
+[2025-05-26T10:06:57.927Z] INFO: client data get Successfully..
+[2025-05-26T10:06:57.999Z] INFO: client data get Successfully..
+[2025-05-26T10:37:37.779Z] INFO: client data get Successfully..
+[2025-05-26T10:40:53.345Z] INFO: client data get Successfully..
+[2025-05-26T10:43:36.978Z] INFO: client data get Successfully..
+[2025-05-26T11:23:28.877Z] INFO: client data get Successfully..
+[2025-05-27T02:33:05.417Z] INFO: client data get Successfully..
+[2025-05-27T02:34:58.051Z] INFO: client data get Successfully..
+[2025-05-27T02:35:09.451Z] INFO: client data get Successfully..
+[2025-05-27T02:35:57.066Z] INFO: client data get Successfully..
+[2025-05-27T02:35:57.149Z] INFO: client data get Successfully..
+[2025-05-27T02:37:09.739Z] INFO: client data get Successfully..
+[2025-05-27T02:57:03.422Z] INFO: client data get Successfully..
+[2025-05-27T03:07:25.081Z] INFO: client data get Successfully..
+[2025-05-27T03:45:04.653Z] INFO: client data get Successfully..
+[2025-05-27T03:45:16.408Z] INFO: client data get Successfully..
+[2025-05-27T03:45:39.607Z] INFO: client data get Successfully..
+[2025-05-27T04:46:06.877Z] INFO: client data get Successfully..
+[2025-05-27T05:03:44.709Z] INFO: client data get Successfully..
+[2025-05-27T05:45:22.840Z] INFO: client data get Successfully..
+[2025-05-27T05:45:31.358Z] INFO: client data get Successfully..
+[2025-05-27T05:45:34.144Z] INFO: client data get Successfully..
+[2025-05-27T05:45:41.139Z] INFO: client data get Successfully..
+[2025-05-27T07:03:54.069Z] INFO: client data get Successfully..
+[2025-05-27T07:04:17.186Z] INFO: client data get Successfully..
+[2025-05-27T07:04:19.783Z] INFO: client data get Successfully..
+[2025-05-27T07:04:50.730Z] INFO: client data get Successfully..
+[2025-05-27T07:18:10.238Z] INFO: client data get Successfully..
+[2025-05-27T07:18:16.343Z] INFO: client data get Successfully..
+[2025-05-27T07:19:37.966Z] INFO: client data get Successfully..
+[2025-05-27T07:20:35.774Z] INFO: client register Successfully..
+[2025-05-27T07:20:51.484Z] INFO: client data get Successfully..
+[2025-05-27T07:24:06.832Z] INFO: client data get Successfully..
+[2025-05-27T07:39:34.938Z] INFO: client data get Successfully..
+[2025-05-27T07:41:57.209Z] INFO: client data get Successfully..
+[2025-05-27T07:42:10.681Z] INFO: client data get Successfully..
+[2025-05-27T07:42:54.821Z] INFO: client data get Successfully..
+[2025-05-27T07:43:09.289Z] INFO: client data get Successfully..
+[2025-05-27T07:44:01.070Z] INFO: client data get Successfully..
+[2025-05-27T07:44:27.314Z] INFO: client register Successfully..
+[2025-05-27T07:44:34.300Z] INFO: client data get Successfully..
+[2025-05-27T07:44:50.428Z] INFO: client data get Successfully..
+[2025-05-27T08:24:14.731Z] INFO: client data get Successfully..
+[2025-05-27T08:24:16.116Z] INFO: client data get Successfully..
+[2025-05-27T08:24:18.184Z] INFO: client data get Successfully..
+[2025-05-27T08:57:55.161Z] INFO: client data get Successfully..
+[2025-05-27T10:03:34.632Z] INFO: client data get Successfully..
+[2025-05-27T10:26:14.426Z] INFO: client data get Successfully..
+[2025-05-27T11:21:44.831Z] INFO: Answers and version saved successfully.
+[2025-05-27T12:17:42.054Z] INFO: client data get Successfully..
+[2025-05-27T12:19:55.111Z] INFO: client data get Successfully..
+[2025-05-27T12:25:37.462Z] INFO: client data get Successfully..
+[2025-05-27T12:25:47.358Z] INFO: client data get Successfully..
+[2025-05-27T12:26:13.501Z] INFO: client data get Successfully..
+[2025-05-27T12:26:56.912Z] INFO: client data get Successfully..
+[2025-05-27T12:27:40.786Z] INFO: client data get Successfully..
+[2025-05-27T12:28:42.621Z] INFO: client data get Successfully..
+[2025-05-27T12:31:37.845Z] INFO: client data get Successfully..
+[2025-05-27T12:43:18.917Z] INFO: client data get Successfully..
+[2025-05-27T13:18:39.500Z] INFO: client data get Successfully..
+[2025-05-27T13:19:01.326Z] INFO: client data get Successfully..
+[2025-05-27T13:24:53.901Z] INFO: client data get Successfully..
+[2025-05-27T13:24:56.328Z] INFO: client data get Successfully..
+[2025-05-27T13:24:57.547Z] INFO: client data get Successfully..
+[2025-05-27T13:25:14.504Z] INFO: client data get Successfully..

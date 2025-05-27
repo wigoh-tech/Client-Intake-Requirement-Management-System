@@ -49,11 +49,11 @@ export default function FileUpload({ questionId, clientId }: { questionId: numbe
           className="text-sm text-gray-400 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >Document</label>
         <input
-          className="flex w-full rounded-md border border-input bg-white text-sm text-gray-400 file:border-0 file:bg-blue-600 file:text-white file:text-sm file:font-medium"
+          className="flex w-full rounded-md border border-input bg-white text-sm text-gray-400 file:border-0 file:bg-violet-600 file:text-white file:text-sm file:font-medium"
           type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange}
 
         />
-        <button onClick={handleUpload} className="bg-blue-600 text-white px-4 py-1 rounded">
+        <button onClick={handleUpload} className="bg-violet-600 text-white px-4 py-1 rounded">
           Upload
         </button>
         {progress > 0 && <progress value={progress} max={100} className="w-full" />}

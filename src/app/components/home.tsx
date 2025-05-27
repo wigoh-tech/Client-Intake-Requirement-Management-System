@@ -57,13 +57,13 @@ export default function Home() {
       <div className="max-w-7xl mx-auto mt-16 flex flex-col-reverse lg:flex-row items-center justify-between gap-12">
 
         <div className="lg:w-1/2">
-          <h1 className="text-5xl font-extrabold text-blue-800 leading-tight mb-6">
+          <h1 className="text-5xl font-extrabold text-violet-800 leading-tight mb-6">
           {userId && (`Welcome to the Client Intake App "${user?.username}"`)}
           </h1>
           <p className="text-lg mb-6">
             This platform helps you collect and manage client intake forms efficiently. Whether you're a therapist, consultant, or agency — streamline the intake process with our customizable forms and client tracking system.
           </p>
-          <p className="text-lg text-blue-900 font-semibold mb-4">
+          <p className="text-lg text-violet-900 font-semibold mb-4">
             👉 Start by registering your account, then add your project requirements to begin the intake process.
           </p>
           <p
@@ -72,7 +72,7 @@ export default function Home() {
             }}
             className={`inline-block px-6 py-3 font-medium rounded-xl shadow transition ${isDisabled
               ? "bg-gray-400 text-white cursor-not-allowed pointer-events-none"
-              : "bg-blue-600 text-white hover:bg-blue-700"
+              : "bg-violet-600 text-white hover:bg-violet-700"
               }`}
           >
             Client Login
@@ -81,7 +81,7 @@ export default function Home() {
 
           <div className="mt-8">
             {userId && (
-              <p>Hello,{user?.username} <span className="font-semibold text-blue-700">{userId}</span> — your active session is <span className="font-semibold">{sessionId}</span>.</p>
+              <p>Hello,{user?.username} <span className="font-semibold text-violet-700">{userId}</span> — your active session is <span className="font-semibold">{sessionId}</span>.</p>
             )}
           </div>
 

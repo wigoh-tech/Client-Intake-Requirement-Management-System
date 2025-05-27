@@ -3,6 +3,18 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 
+type Sender = {
+  name: string;
+  role: string;
+  email: string;
+};
+
+type Message = {
+  sender: Sender;
+  message: string;
+  time: string;
+};
+
 export async function POST(req: Request) {
   try {
     const { userId } = await auth();
@@ -64,13 +76,13 @@ export async function POST(req: Request) {
       finalRequirementVersionId = firstClient.requirementVersions[0].id;
     }
 
-    const sender = {
+    const sender: Sender = {
       name: clerkUser.username || clerkUser.first_name || clerkUser.id || "Unknown",
       email: clerkUser.email_addresses?.[0]?.email_address || "no-email@example.com",
       role: user.role === "admin" ? "admin" : "client",
     };
 
-    const message = {
+    const message: Message = {
       sender,
       message: newMessageText,
       time: new Date().toISOString(),
@@ -128,64 +140,6 @@ export async function POST(req: Request) {
   }
 }
 
-
-
-// export async function GET(req: Request) {
-//   const { userId } = await auth();
-//   if (!userId) {
-//     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-//   }
-
-//   const url = new URL(req.url);
-//   const requirementVersionId = url.searchParams.get("requirementVersionId");
-
-//   if (!requirementVersionId) {
-//     return NextResponse.json(
-//       { message: "Missing requirementVersionId" },
-//       { status: 400 }
-//     );
-//   }
-
-//   try {
-//     const comments = await prisma.comment.findMany({
-//       where: {
-//         requirementVersionId: Number(requirementVersionId),
-//       },
-//       orderBy: {
-//         createdAt: "asc",
-//       },
-//       select: {
-//         id: true,
-//         content: true,
-//         createdAt: true,
-//         author: true,
-//         sender: true,
-//       },
-//     });
-
-//     return NextResponse.json(comments);
-//   } catch (error) {
-//     console.error("Error fetching comments:", error);
-//     return NextResponse.json(
-//       { message: "Internal Server Error" },
-//       { status: 500 }
-//     );
-//   }
-// }
-
-
-type Sender = {
-  name: string;
-  role: string;
-  email: string;
-};
-
-type Message = {
-  sender: Sender;
-  message: string;
-  time: string;
-};
-
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const requirementVersionId = Number(searchParams.get("requirementVersionId"));
@@ -206,9 +160,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "No comments found", content: [] }, { status: 200 });
     }
 
-    // 🛠️ Fix: Safely cast each content to Message[]
+    // Flatten all messages from all comment records
     const allMessages: Message[] = comments.flatMap((comment) => {
-      const content = comment.content as unknown;
+      const content = comment.content;
       if (Array.isArray(content)) {
         return content as Message[];
       }
@@ -223,6 +177,3 @@ export async function GET(req: Request) {
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
-
-
-
