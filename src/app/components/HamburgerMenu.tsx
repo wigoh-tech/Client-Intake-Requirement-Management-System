@@ -89,14 +89,14 @@ export default function HamburgerMenu() {
         </div>
 
         {/* Intake Question */}
-        {isAdmin === true && (
+        {/* {isAdmin === true && (
           <div
             className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 hover:text-black rounded-lg transition ${!isOpen ? 'justify-center' : ''} ${getActiveClass('intake-form')}`}
             onClick={() => handleMenuClick('intake-form')}>
             <FaWpforms size={24} />
             {isOpen && <span>Intake Question</span>}
           </div>
-        )}
+        )} */}
 
         {/* Client Question */}
         {isAdmin === false && (
@@ -176,7 +176,7 @@ export default function HamburgerMenu() {
         {currentPage === 'our-services' && <OurServices />}
         {currentPage === 'Client-form' && <Clientpage />}
         {currentPage === 'Admin' && <Admin />}
-        {currentPage === 'intake-form' && <IntakeForm />}
+        {currentPage === 'intake-form' && <IntakeForm requirementVersionId={0} />}
         {currentPage === 'contact-us' && <ContactUs />}
       </div>
 

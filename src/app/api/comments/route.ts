@@ -40,7 +40,10 @@ export async function POST(req: Request) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      return NextResponse.json({ message: "Clerk error: " + errorText }, { status: 500 });
+      return NextResponse.json(
+        { message: "Clerk error: " + errorText },
+        { status: 500 }
+      );
     }
 
     const clerkUser = await response.json();
@@ -60,25 +63,39 @@ export async function POST(req: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({ message: "User not found in DB" }, { status: 404 });
+      return NextResponse.json(
+        { message: "User not found in DB" },
+        { status: 404 }
+      );
     }
 
     let finalRequirementVersionId = requirementVersionId;
-    if (!finalRequirementVersionId) {
-      const firstClient = user.clients[0];
-      if (!firstClient || firstClient.requirementVersions.length === 0) {
-        return NextResponse.json(
-          { message: "No requirement version found for this client." },
-          { status: 400 }
-        );
-      }
 
-      finalRequirementVersionId = firstClient.requirementVersions[0].id;
+    const clientWithVersion = await prisma.client.findFirst({
+      where: {
+        requirementVersions: {
+          some: {
+            id: finalRequirementVersionId,
+          },
+        },
+      },
+      include: {
+        requirementVersions: true,
+      },
+    });
+
+    if (!clientWithVersion) {
+      return NextResponse.json(
+        { message: "No client found for the provided requirementVersionId." },
+        { status: 400 }
+      );
     }
 
     const sender: Sender = {
-      name: clerkUser.username || clerkUser.first_name || clerkUser.id || "Unknown",
-      email: clerkUser.email_addresses?.[0]?.email_address || "no-email@example.com",
+      name:
+        clerkUser.username || clerkUser.first_name || clerkUser.id || "Unknown",
+      email:
+        clerkUser.email_addresses?.[0]?.email_address || "no-email@example.com",
       role: user.role === "admin" ? "admin" : "client",
     };
 
@@ -136,7 +153,10 @@ export async function POST(req: Request) {
     }
   } catch (error) {
     console.error("Error saving comment:", error);
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -145,19 +165,26 @@ export async function GET(req: Request) {
   const requirementVersionId = Number(searchParams.get("requirementVersionId"));
 
   if (!requirementVersionId) {
-    return NextResponse.json({ message: "requirementVersionId is required" }, { status: 400 });
+    return NextResponse.json(
+      { message: "requirementVersionId is required" },
+      { status: 400 }
+    );
   }
 
   try {
     const { userId } = await auth();
-    if (!userId) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (!userId)
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
     const comments = await prisma.comment.findMany({
       where: { requirementVersionId },
     });
 
     if (!comments.length) {
-      return NextResponse.json({ message: "No comments found", content: [] }, { status: 200 });
+      return NextResponse.json(
+        { message: "No comments found", content: [] },
+        { status: 200 }
+      );
     }
 
     // Flatten all messages from all comment records
@@ -169,7 +196,9 @@ export async function GET(req: Request) {
       return [];
     });
 
-    allMessages.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+    allMessages.sort(
+      (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime()
+    );
 
     return NextResponse.json({ content: allMessages }, { status: 200 });
   } catch (err) {

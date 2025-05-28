@@ -1,9 +1,12 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import Column from './Column';
-import IntakeForm from '../intakeForm';
+import UserIntakeForm from '../additional/userIntakeform';
+import ReviewSection from '../review/page';
+import { MessageSquare } from 'lucide-react'; // You can install lucide-react or replace with emoji/icon
 
 type Task = {
   id: string;
@@ -19,7 +22,7 @@ type ColumnType = {
   [key in 'todo' | 'inProgress' | 'done']: Task[];
 };
 
-const KanbanBoard = () => {
+export default function KanbanBoard () {
   const [columns, setColumns] = useState<ColumnType>({
     todo: [],
     inProgress: [],
@@ -27,8 +30,8 @@ const KanbanBoard = () => {
   });
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // ✅ Load all tasks and group by column
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -46,7 +49,7 @@ const KanbanBoard = () => {
             id: String(item.id),
             content: item.answer,
             client: item.client,
-            clientId: item.clientId, // ✅ Include clientId
+            clientId: item.clientId,
           };
 
           const status = item.status as keyof ColumnType;
@@ -64,7 +67,6 @@ const KanbanBoard = () => {
     fetchData();
   }, []);
 
-  // ✅ When a task is moved
   const onDragEnd = async (result: DropResult) => {
     const { source, destination } = result;
     if (!destination) return;
@@ -72,11 +74,7 @@ const KanbanBoard = () => {
     const sourceColumn = source.droppableId as keyof ColumnType;
     const destColumn = destination.droppableId as keyof ColumnType;
 
-    if (
-      sourceColumn === destColumn &&
-      source.index === destination.index
-    )
-      return;
+    if (sourceColumn === destColumn && source.index === destination.index) return;
 
     const sourceTasks = Array.from(columns[sourceColumn]);
     const destinationTasks = Array.from(columns[destColumn]);
@@ -84,7 +82,6 @@ const KanbanBoard = () => {
 
     destinationTasks.splice(destination.index, 0, movedTask);
 
-    // Optimistically update UI
     setColumns({
       ...columns,
       [sourceColumn]: sourceTasks,
@@ -100,7 +97,6 @@ const KanbanBoard = () => {
         body: JSON.stringify({ status: destColumn }),
       });
 
-      // ✅ If clientId not already present, fetch it
       if (!movedTask.clientId) {
         const response = await fetch(`/api/requirement/${movedTask.id}`);
         const data = await response.json();
@@ -115,12 +111,43 @@ const KanbanBoard = () => {
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask((prev) => (prev?.id === task.id ? null : task));
+    setIsChatOpen(false); // Close chatbox when switching task
   };
 
   return (
     <>
+      {/* Toggle Icon Button */}
+      {selectedTask && (
+        <div style={{ position: 'fixed', bottom: '30px', right: '40px', zIndex: 1000 }}>
+          <button
+            onClick={() => setIsChatOpen((prev) => !prev)}
+            style={{
+              backgroundColor: '#9F2B68',
+              border: 'none',
+              borderRadius: '10px',
+              width: '140px',
+              height: '50px',
+              display: 'flex',
+              gap:'5px',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              textAlign:'center',
+              color: '#fff',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+              transition: 'transform 0.2s',
+            }}
+            title={isChatOpen ? 'Close Chat' : 'Open Chat'}
+          >
+            
+            <MessageSquare size={24} /><p>Let's chat</p>
+          </button>
+        </div>
+      )}
+
+      {/* Kanban Columns */}
       <DragDropContext onDragEnd={onDragEnd}>
-        <div style={{ display: 'flex', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '16px', marginTop: '150px', marginLeft: '100px' }}>
           {Object.entries(columns).map(([key, tasks]) => (
             <div key={key}>
               <Column columnId={key} tasks={tasks} onTaskClick={handleTaskClick} />
@@ -129,13 +156,36 @@ const KanbanBoard = () => {
         </div>
       </DragDropContext>
 
-      {selectedTask && (
-        <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#f0f0f0', borderRadius: '8px' }}>
-          <IntakeForm showOnlyView clientId={selectedTask.clientId} />
+      {/* User Intake Form */}
+      {selectedTask?.clientId && (
+        <div style={{ marginTop: '24px', padding: '16px', borderRadius: '8px' }}>
+          <UserIntakeForm clientId={selectedTask.clientId} />
         </div>
       )}
+
+      {/* Animated Chatbox */}
+      <div
+        style={{
+          position: 'fixed',
+          top: '90px',
+          right: 0,
+          width: '422px',
+          maxHeight: '80vh',
+          backgroundColor: '#fff',
+          boxShadow: '0 0 10px rgba(0,0,0,0.15)',
+          borderRadius: '10px 0 0 10px',
+          overflowY: 'auto',
+          padding: '20px',
+          zIndex: 999,
+          transform: isChatOpen ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.3s ease-in-out',
+        }}
+      >
+        {selectedTask && <ReviewSection requirementVersionId={1} />}
+      </div>
     </>
   );
 };
 
-export default KanbanBoard;
+
+

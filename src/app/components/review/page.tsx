@@ -96,7 +96,7 @@ export default function ReviewSection({
 
   return (
     <div className="max-w-xl mx-auto mt-4 p-4 border rounded-xl bg-white shadow">
-      <div className="h-96 overflow-y-auto border-b pb-4 mb-4">
+      <div className="h-156 overflow-y-auto border-b pb-4 mb-4">
         {messages.length === 0 && (
           <p className="text-center text-gray-400">No messages yet.</p>
         )}

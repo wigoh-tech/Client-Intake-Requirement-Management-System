@@ -28,7 +28,6 @@ model Client {
   answers             IntakeAnswer[]
   requirementVersions RequirementVersion[] @relation("RequirementClient")
   requirements        Requirement[]
-  assignedForm        AssignedForm?        @relation("ClientAssignedForm")
 }
 
 model IntakeQuestion {

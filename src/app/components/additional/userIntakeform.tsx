@@ -114,11 +114,11 @@ export default function UserIntakeForm({ clientId }: { clientId: string }) {
   if (questions.length === 0) return <p>Loading questions...</p>;
 
   return (
-    <div className="max-w-xl mx-auto p-4 border rounded shadow-sm">
+    <div className="max-w-xl ml-21 p-4 border rounded shadow-sm">
         
       <h2 className="text-2xl font-bold mb-4">Intake Form</h2>
       <button
-          className="px-6 py-2 min-w-[120px] text-center text-white bg-violet-600 border border-violet-600 rounded active:text-violet-500 hover:bg-transparent hover:text-violet-600 focus:outline-none focus:ring"
+          className="px-6 py-2 min-w-[120px] text-center bg-violet-600 border border-violet-600 rounded active:text-violet-500 hover:bg-transparent hover:text-violet-600 focus:outline-none focus:ring"
           onClick={async () => {
             if (!clientId) return;
 
@@ -152,13 +152,13 @@ export default function UserIntakeForm({ clientId }: { clientId: string }) {
           <p className="font-medium mb-1">{q.question}</p>
 
           {formType === 'view' ? (
-            <p className="p-2 bg-gray-100 rounded">
+            <p className="p-2 rounded">
               {previousAnswers[q.id] ?? <em>No answer provided</em>}
             </p>
           ) : (
             <input
               type="text"
-              className="w-full border rounded p-2"
+              className="w-full border-2 rounded p-2"
               value={answers[q.id] || ''}
               onChange={(e) => handleInputChange(q.id, e.target.value)}
               placeholder="Your answer"
@@ -170,7 +170,7 @@ export default function UserIntakeForm({ clientId }: { clientId: string }) {
       {formType === 'view' ? (
         <button
           onClick={() => setFormType('edit')}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
         >
           Edit
         </button>
@@ -178,7 +178,7 @@ export default function UserIntakeForm({ clientId }: { clientId: string }) {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+          className="px-4 py-2 bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
         >
           {loading ? 'Saving...' : 'Save'}
         </button>

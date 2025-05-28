@@ -1,13 +1,19 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import FileUpload from './uploadFile';
+import ReviewSection from '../components/review/page';
 
-export default function IntakeForm({ showOnlyView = false,
-  clientId: passedClientId,
-}: {
+interface IntakeFormProps {
   showOnlyView?: boolean;
   clientId?: string;
-}) {
+  requirementVersionId: number;
+}
+
+export default function IntakeForm({
+  showOnlyView = false,
+  clientId: passedClientId,
+  requirementVersionId,
+}: IntakeFormProps){
   const [questions, setQuestions] = useState<{
     options: string | boolean;
     fieldType: string;
@@ -289,7 +295,9 @@ export default function IntakeForm({ showOnlyView = false,
             </button>
           )}
 
-          
+          {(formType === 'view' || showOnlyView) && (
+             <ReviewSection requirementVersionId={requirementVersionId} />
+          )}
         </div>
       )}
 

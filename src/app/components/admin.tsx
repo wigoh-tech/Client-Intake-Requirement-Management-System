@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import AdminFormBuilder from './AdminFormBuilder';
-import KanbanBoard from './kanban/KanbanBoard';
+// import AdminFormBuilder from './admin-form-builder/AdminFormBuilder';
+import KanbanBoard from './kanban/page';
 
 function Admin() {
   const [activeComponent, setActiveComponent] = useState<'kanban' | 'form' | null>(null);
@@ -24,9 +24,9 @@ function Admin() {
 
       <div className="mt-4">
         {activeComponent === 'kanban' && <KanbanBoard />}
-        {activeComponent === 'form' && <AdminFormBuilder onSelect={function (id: string): void {
+        {/* {activeComponent === 'form' && <AdminFormBuilder onSelect={function (id: string): void {
                   throw new Error('Function not implemented.');
-              } } />}
+              } } />} */}
       </div>
     </div>
   );
