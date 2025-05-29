@@ -1,11 +1,11 @@
 'use client';
 import React from 'react';
-import HamburgerMenu from './components/HamburgerMenu';
+import Home from './components/home';
 
 function Navbar() {
   return (
     <div>
-      <HamburgerMenu />
+        <Home />
     </div>
   );
 }

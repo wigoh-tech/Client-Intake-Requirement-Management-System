@@ -1,18 +1,19 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { clientId, questionIds } = await req.json();
 
-    if (!clientId || !questionIds?.length) {
-      return NextResponse.json(
-        { message: 'clientId and questionIds are required' },
-        { status: 400 }
-      );
+    if (!clientId) {
+      return NextResponse.json({ message: 'Missing clientId' }, { status: 400 });
     }
 
-    // Save form assignment
+    if (!questionIds || !Array.isArray(questionIds) || questionIds.length === 0) {
+      return NextResponse.json({ message: 'Missing or empty questionIds' }, { status: 400 });
+    }
+
+    // 1. Create the form assignment
     const formAssignment = await prisma.formAssignments.create({
       data: {
         clientId,
@@ -20,25 +21,20 @@ export async function POST(req: Request) {
       },
     });
 
-    // Create notification for client
+    // 2. Create a notification linked to this form assignment
+    const notificationMessage = 'You have received a new intake form. Please complete it.';
+
     await prisma.userNotification.create({
       data: {
         clientId,
+        message: notificationMessage,
         formId: formAssignment.id,
-        message: 'You have a new form to fill!',
-        isRead: false,
-        createdAt: new Date(),
       },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ message: 'Form assigned and notification sent' }, { status: 200 });
   } catch (error) {
-    console.error('Error in /api/form-assign:', error);
-    return NextResponse.json(
-      { message: 'Error assigning form' },
-      { status: 500 }
-    );
+    console.error('Error in form-assign API:', error);
+    return NextResponse.json({ message: 'Server error' }, { status: 500 });
   }
 }
-
-

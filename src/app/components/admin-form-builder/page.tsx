@@ -42,7 +42,7 @@ export default function AdminFormBuilder({ onSelect }: { onSelect: (id: string) 
   if (!isAdmin) return <div className="p-6 text-red-500">Access denied</div>;
 
   return (
-    <div className="max-w-6xl mx-auto mt-20 relative">
+    <div className="max-w-6xl mx-auto mt-20 relative ">
 
       {/* Toggle Button fixed under header top-left */}
       <button
@@ -55,11 +55,11 @@ export default function AdminFormBuilder({ onSelect }: { onSelect: (id: string) 
 
       {/* Sidebar sliding in from left, under header */}
       <div
-  className={`fixed top-[4.5rem] mt-13 left-0 h-[calc(100vh-4.5rem)] w-80 bg-white shadow-xl p-4 overflow-y-auto z-30 transition-transform duration-300 ease-in-out
+        className={`fixed top-[4.5rem] mt-13 left-0 h-[calc(100vh-4.5rem)] w-80 bg-white shadow-xl p-4 overflow-y-auto z-30 transition-transform duration-300 ease-in-out
     ${showSidebar ? 'translate-x-0' : '-translate-x-full'}
     scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-200
   `}
->
+      >
         <h2 className="text-xl font-semibold mb-3">Available Questions</h2>
         <div className="space-y-2">
           {availableQuestions.map((q: any) => (
@@ -134,7 +134,7 @@ export default function AdminFormBuilder({ onSelect }: { onSelect: (id: string) 
         </select>
 
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-4 py-2 bg-violet-600 text-white rounded hover:bg-violet-700"
           onClick={async () => {
             if (!selectedClientId) {
               alert("Please select a client first.");
@@ -156,7 +156,7 @@ export default function AdminFormBuilder({ onSelect }: { onSelect: (id: string) 
 
             const result = await res.json();
             if (res.ok) {
-              alert("Form sent to client!");
+              alert("Form sent to client and notification created!");
             } else {
               alert(`Error: ${result.message}`);
             }
@@ -164,6 +164,40 @@ export default function AdminFormBuilder({ onSelect }: { onSelect: (id: string) 
         >
           Send Form to Client
         </button>
+
+
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          onClick={async () => {
+            if (!selectedClientId) {
+              alert("Please select a client first.");
+              return;
+            }
+
+            try {
+              const res = await fetch('/api/send-default-intake', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ clientId: selectedClientId }),
+              });
+
+              const result = await res.json();
+
+              if (res.ok) {
+                alert("Default Intake Form sent to client!");
+              } else {
+                alert(`Error: ${result.message || 'Unknown error'}`);
+              }
+            } catch (err) {
+              console.error("Unexpected error:", err);
+              alert("Something went wrong.");
+            }
+          }}
+        >
+          Send Default Intake Form
+        </button>
+
+
       </div>
     </div>
   );

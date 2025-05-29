@@ -49,7 +49,7 @@ export default function FileUpload({ questionId, clientId }: { questionId: numbe
           className="text-sm text-gray-400 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >Document</label>
         <input
-          className="flex w-full rounded-md border border-input bg-white text-sm text-gray-400 file:border-0 file:bg-violet-600 file:text-white file:text-sm file:font-medium"
+          className="flex w-full rounded-sm border border-input bg-white text-sm text-gray-400 file:border-0 file:bg-violet-600 file:text-white file:text-sm file:font-medium"
           type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange}
 
         />

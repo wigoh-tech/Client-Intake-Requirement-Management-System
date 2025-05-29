@@ -1,7 +1,14 @@
-import React from 'react'
+import React from 'react';
+import Header from '../header/page';
 
 export default function Mainadminpage() {
   return (
-    <div>mainadminpage</div>
-  )
+    <div>
+      <Header />
+      <div className="p-6 mt-10 text-lg">
+        mainadminpage content goes here
+      </div>
+     
+    </div>
+  );
 }

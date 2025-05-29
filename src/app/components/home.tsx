@@ -1,10 +1,9 @@
-
 import { useAuth, useUser } from '@clerk/nextjs';
 import React, { useEffect, useState } from 'react';
 import RegisterClient from './register-client';
 import axios from "axios";
 
-export default function Home() {
+export default function Home({ onClientRegistered }: { onClientRegistered?: () => void }) {
   const { userId, sessionId } = useAuth();
   const { user } = useUser();
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -27,9 +26,14 @@ export default function Home() {
         setLoadingClients(false);
       }
     }
-    fetchClients();
-  }, []);
-
+  
+    if (user && user.publicMetadata?.role === 'admin') {
+      fetchClients();
+    } else {
+      setLoadingClients(false); // stop spinner if not fetching
+    }
+  }, [user]);
+  
   useEffect(() => {
     async function fetchUsers() {
       try {
@@ -58,7 +62,7 @@ export default function Home() {
 
         <div className="lg:w-1/2">
           <h1 className="text-5xl font-extrabold text-violet-800 leading-tight mb-6">
-          {userId && (`Welcome to the Client Intake App "${user?.username}"`)}
+            {userId && (`Welcome to the Client Intake App "${user?.username}"`)}
           </h1>
           <p className="text-lg mb-6">
             This platform helps you collect and manage client intake forms efficiently. Whether you're a therapist, consultant, or agency — streamline the intake process with our customizable forms and client tracking system.
@@ -89,8 +93,8 @@ export default function Home() {
 
 
         <div className="w-full md:w-1/2 py-8">
-            <img src="https://www.svgrepo.com/show/493509/person-who-invests.svg" className="g-image" />
-          </div>
+          <img src="https://www.svgrepo.com/show/493509/person-who-invests.svg" className="g-image" />
+        </div>
       </div>
 
       {isPopupVisible && (
@@ -125,8 +129,7 @@ export default function Home() {
           </div>
 
         </div>
-      )}      
+      )}
     </div>
   );
 }
-

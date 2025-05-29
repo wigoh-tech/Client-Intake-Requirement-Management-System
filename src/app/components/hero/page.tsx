@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import Client from './additional/client';
+"use client";
+import React from 'react';
+import Client from '../additional/client';
 
 function Hero() {
 
