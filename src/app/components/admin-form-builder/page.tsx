@@ -42,12 +42,12 @@ export default function AdminFormBuilder({ onSelect }: { onSelect: (id: string) 
   if (!isAdmin) return <div className="p-6 text-red-500">Access denied</div>;
 
   return (
-    <div className="max-w-6xl mx-auto mt-20 relative ">
+    <div className="max-w-6xl mx-auto mt-10 relative ">
 
       {/* Toggle Button fixed under header top-left */}
       <button
         onClick={() => setShowSidebar(!showSidebar)}
-        className="fixed top-[4.5rem] left-4 z-40 p-2 mt-5 rounded-full bg-purple-600 text-white hover:bg-purple-700 shadow-lg"
+        className="fixed top-[4.5rem] right-10 z-40 p-2 mt-5 rounded-full bg-purple-600 hover:bg-purple-700 shadow-lg"
         aria-label={showSidebar ? 'Close sidebar' : 'Open sidebar'}
       >
         {showSidebar ? <X /> : <Menu />}
@@ -55,17 +55,15 @@ export default function AdminFormBuilder({ onSelect }: { onSelect: (id: string) 
 
       {/* Sidebar sliding in from left, under header */}
       <div
-        className={`fixed top-[4.5rem] mt-13 left-0 h-[calc(100vh-4.5rem)] w-80 bg-white shadow-xl p-4 overflow-y-auto z-30 transition-transform duration-300 ease-in-out
-    ${showSidebar ? 'translate-x-0' : '-translate-x-full'}
-    scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-200
-  `}
-      >
+        className={`fixed top-[4.5rem] border rounded right-0 h-[calc(100vh-4.5rem)] w-80 shadow-xl p-4 overflow-y-auto z-30 transition-transform duration-300 ease-in-out
+        ${showSidebar ? 'translate-x-0' : 'translate-x-full'}
+        scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-200`}>
         <h2 className="text-xl font-semibold mb-3">Available Questions</h2>
         <div className="space-y-2">
           {availableQuestions.map((q: any) => (
             <div
               key={q.id}
-              className="p-2 border rounded bg-gray-50 flex justify-between items-center"
+              className="p-2 border rounded flex justify-between items-center"
             >
               <span>{q.question}</span>
               <button
@@ -84,7 +82,7 @@ export default function AdminFormBuilder({ onSelect }: { onSelect: (id: string) 
 
       {/* Main Content (centered) with padding so toggle button doesn't overlap */}
       <div className="p-6 max-w-4xl mx-auto">
-        <div className="bg-white p-4 rounded shadow mb-6">
+        <div className="p-4 rounded    shadow mb-6">
           <h2 className="text-xl font-semibold mb-3">Form Questions</h2>
           <DndContext
             collisionDetection={closestCenter}
@@ -132,72 +130,71 @@ export default function AdminFormBuilder({ onSelect }: { onSelect: (id: string) 
             </option>
           ))}
         </select>
+        <div className='flex gap-4'>
 
-        <button
-          className="px-4 py-2 bg-violet-600 text-white rounded hover:bg-violet-700"
-          onClick={async () => {
-            if (!selectedClientId) {
-              alert("Please select a client first.");
-              return;
-            }
-            if (selectedQuestions.length === 0) {
-              alert("Please select at least one question.");
-              return;
-            }
+          <button
+            className="px-4 py-2 bg-violet-600 rounded hover:bg-violet-700"
+            onClick={async () => {
+              if (!selectedClientId) {
+                alert("Please select a client first.");
+                return;
+              }
+              if (selectedQuestions.length === 0) {
+                alert("Please select at least one question.");
+                return;
+              }
 
-            const res = await fetch('/api/form-assign', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                clientId: selectedClientId,
-                questionIds: selectedQuestions,
-              }),
-            });
-
-            const result = await res.json();
-            if (res.ok) {
-              alert("Form sent to client and notification created!");
-            } else {
-              alert(`Error: ${result.message}`);
-            }
-          }}
-        >
-          Send Form to Client
-        </button>
-
-
-        <button
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-          onClick={async () => {
-            if (!selectedClientId) {
-              alert("Please select a client first.");
-              return;
-            }
-
-            try {
-              const res = await fetch('/api/send-default-intake', {
+              const res = await fetch('/api/form-assign', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ clientId: selectedClientId }),
+                body: JSON.stringify({
+                  clientId: selectedClientId,
+                  questionIds: selectedQuestions,
+                }),
               });
 
               const result = await res.json();
-
               if (res.ok) {
-                alert("Default Intake Form sent to client!");
+                alert("Form sent to client and notification created!");
               } else {
-                alert(`Error: ${result.message || 'Unknown error'}`);
+                alert(`Error: ${result.message}`);
               }
-            } catch (err) {
-              console.error("Unexpected error:", err);
-              alert("Something went wrong.");
-            }
-          }}
-        >
-          Send Default Intake Form
-        </button>
+            }}
+          >
+            Send Form to Client
+          </button>
+          <button
+            className="px-4 py-2 bg-green-600 rounded hover:bg-green-700"
+            onClick={async () => {
+              if (!selectedClientId) {
+                alert("Please select a client first.");
+                return;
+              }
 
+              try {
+                const res = await fetch('/api/send-default-intake', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ clientId: selectedClientId }),
+                });
 
+                const result = await res.json();
+
+                if (res.ok) {
+                  alert("Default Intake Form sent to client!");
+                } else {
+                  alert(`Error: ${result.message || 'Unknown error'}`);
+                }
+              } catch (err) {
+                console.error("Unexpected error:", err);
+                alert("Something went wrong.");
+              }
+            }}
+          >
+            Send Default Intake Form
+          </button>
+
+        </div>
       </div>
     </div>
   );

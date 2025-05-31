@@ -1,4 +1,4 @@
-import { Client } from "@clerk/nextjs/server";
+'use client';
 import React from "react";
 
 // const services = [

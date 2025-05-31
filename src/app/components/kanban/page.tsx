@@ -147,7 +147,7 @@ export default function KanbanBoard () {
 
       {/* Kanban Columns */}
       <DragDropContext onDragEnd={onDragEnd}>
-        <div style={{ display: 'flex', gap: '16px', marginTop: '150px', marginLeft: '100px' }}>
+        <div style={{ display: 'flex', gap: '16px', marginTop: '20px', marginLeft: '10px' }}>
           {Object.entries(columns).map(([key, tasks]) => (
             <div key={key}>
               <Column columnId={key} tasks={tasks} onTaskClick={handleTaskClick} />

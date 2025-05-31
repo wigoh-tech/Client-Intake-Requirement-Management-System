@@ -1,3 +1,4 @@
+'use client';
 import { useAuth, useUser } from '@clerk/nextjs';
 import React, { useEffect, useState } from 'react';
 import RegisterClient from './register-client';
